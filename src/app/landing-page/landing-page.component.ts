@@ -1,0 +1,1060 @@
+
+
+import { LandingPageService } from '../services/landing-page.service';
+import { environment } from 'src/environments/environment';
+import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
+
+
+interface NavbarItem {
+  id: number;
+  name: string | null;
+  type: string | null;
+  url: string | null;
+  is_visible: number | null;
+  is_deleted: number;
+  brand_logo?: string | null;
+  brand_name?: string | null;
+}
+
+interface DayOption {
+  weekday: string;
+  day: number;
+  fullDate: string;
+  slotsText: string;
+  slotsClass: string;
+  available: boolean;
+}
+
+declare var Razorpay: any;
+
+@Component({
+  selector: 'app-landing-page',
+  templateUrl: './landing-page.component.html',
+  styleUrls: ['./landing-page.component.css']
+})
+export class LandingPageComponent implements OnInit {
+  navbarOptions: NavbarItem[] = [];
+  brandDetails: any;
+  brandLogoUrl: string | null = null;
+  baseUrl: string = environment.image_url;
+  landingInfo: any;
+  headingLine1: string = '';
+  headingLine2: string = '';
+  subheading: string = '';
+  buttonText: string = '';
+  icon_1_url: string | null = null;
+  icon_2_url: string | null = null;
+  icon_3_url: string | null = null;
+  icon_4_url: string | null = null;
+
+  // New property for landing page banners
+  banners: any[] = [];
+
+  features: any[] = [];
+  aboutPageData: any = {};
+
+  clientHeading: string = '';
+  clientSubheading: string = '';
+  clientLogos: string[] = [];
+
+  processSteps: any[] = [];
+  groupedProcessSteps: any[][] = [];
+
+  caseStudyTitle: string = 'Case Studies'; // fallback value
+
+  caseStudyImages: string[] = [];
+
+  contactHeading: string = '';
+  contactSubheading: string = '';
+  contactButtonText: string = '';
+  contactImageUrl: string | null = null;
+
+  techMainPage: any = null;
+
+  techList: any[] = [];
+  groupedTechList: any[] = [];  // Initialize as an empty array
+
+  faqTitle: string = '';
+  faqSubheading: string = '';
+  faqs: any[] = [];
+  faqsData: any[] = [];
+
+  expandedIndex: number | null = null;
+  isMobile = false;
+  isSliderOpen: boolean = false;
+
+
+  // Step 1 form values
+  name: string = '';
+  email: string = '';
+  phone: string = '';
+  message: string = '';
+
+  // Step 2 date & time
+  date: string = '';
+  time: string = '';
+
+  // UI State
+  showDateTimePopup: boolean = false;
+  bookingLoading: boolean = false;
+  bookingError: string = '';
+  bookingSuccess: string = '';
+
+
+  selectedMonth: string = '';
+  availableMonths: string[] = [];
+  selectedDay: number | null = null;
+  selectedTime: string = '';
+  availableTimes: string[] = [];
+  bookedTimes: string[] = [];  // Store booked times
+  days: DayOption[] = [];
+
+  showConfirmPaymentPopup = false;
+  pendingBookingData: any = null;
+
+  amount: number = 0;
+
+
+  showFinalStatusPopup: boolean = false;
+  bookingSuccessFlag: boolean = false;
+
+  isLoading: boolean = false;
+
+
+
+  @ViewChild('daysWrapper') daysWrapper!: ElementRef;
+  @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
+
+  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef) { }
+
+  ngOnInit(): void {
+    this.fetchNavBar();
+    this.fetchLandingPageInfo();
+    this.fetchLandingPageBanners(); // Fetch banners on component initialization
+    this.fetchFeaturePage(); // <-- Add this
+    // Fetch the About Page Data
+    this.fetchAboutPageData();
+    this.fetchClientPageContent();
+    this.fetchClientLogos();
+    this.fetchAllProcessSteps();
+    this.fetchCaseStudyTitle();
+    this.fetchCaseStudyImages();
+    this.fetchContactPage();
+    this.fetchTechMainPage();  // Fetch Tech main page data
+    this.fetchAllTech(); // Add this
+    this.fetchFaqPage(); // add this
+    this.fetchQuestionAndAnswer()
+
+    this.generateUpcomingDays(14); // generate 2 weeks by default
+    this.generateMonthOptions();
+    this.isMobile = window.innerWidth <= 600;
+
+    // Optional: Update on resize too
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth <= 600;
+    });
+    this.isMobile = window.innerWidth <= 480;
+  }
+
+  toggleAnswer(index: number): void {
+    this.expandedIndex = this.expandedIndex === index ? null : index;
+  }
+
+  toggleSlider(): void {
+    this.isSliderOpen = !this.isSliderOpen;
+  }
+
+  ngAfterViewInit(): void {
+    this.videoElements.forEach((videoEl: ElementRef) => {
+      const video: HTMLVideoElement = videoEl.nativeElement;
+      video.muted = true; //  Force mute
+      video.autoplay = true; // Also re-enforce autoplay if needed
+      video.loop = true;
+      video.load(); // Reload to apply new settings if necessary
+      video.play().catch(err => {
+        console.warn('Autoplay error:', err);
+      });
+    });
+  }
+
+
+  // Method to generate the next 6 months dynamically
+  generateMonthOptions(): void {
+    const currentMonth = new Date();
+    this.availableMonths = [];
+
+    for (let i = 0; i < 12; i++) {
+      const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + i, 1);
+      const monthString = newDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      this.availableMonths.push(monthString);
+    }
+
+    // Set default month to the first month in the list
+    this.selectedMonth = this.availableMonths[0];
+  }
+
+
+  generateUpcomingDays(numberOfDays: number): void {
+    const today = new Date();
+    this.days = [];
+
+    for (let i = 0; i < numberOfDays; i++) {
+      const day = new Date(today);
+      day.setDate(today.getDate() + i);
+
+      const weekday = day.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateNum = day.getDate();
+
+      this.days.push({
+        weekday,
+        day: dateNum,
+        fullDate: day.toISOString().split('T')[0], // e.g., 2025-04-16
+        slotsText: this.getSlotText(),
+        slotsClass: this.getRandomSlotClass(),
+        available: true
+      });
+    }
+  }
+
+  getSlotText(): string {
+    const slotCount = Math.floor(Math.random() * 10); // simulate slot count
+    return slotCount === 0 ? '—' : `${slotCount} slot${slotCount > 1 ? 's' : ''}`;
+  }
+
+  getRandomSlotClass(): string {
+    const classes = ['green', 'purple', 'red', ''];
+    return classes[Math.floor(Math.random() * classes.length)];
+  }
+
+
+
+
+  selectDay(day: number): void {
+    const selected = this.days.find(d => d.day === day);
+    if (selected?.available) {
+      this.selectedDay = day;
+      this.date = selected.fullDate;
+      // this.loadAvailableTimesForDate(selected.fullDate); 
+      this.loadAvailableTimesForDate(selected.fullDate);  // New method call
+    }
+  }
+
+  selectTime(time: string): void {
+    this.selectedTime = time;
+    this.time = time; // Store the selected time in the 'time' variable
+    console.log('Selected time:', this.time); // Check if time is set properly
+  }
+
+  // loadAvailableTimesForDate(date: string): void {
+  //   // Simulate available time slots per date
+  //   this.availableTimes = ['10:30 AM', '11:30 AM', '1:00 PM', '2:30 PM', '4:00 PM']
+  //     .filter(() => Math.random() > 0.3); // randomly reduce slots
+  // }
+
+
+
+  // loadAvailableTimesForDate(date: string): void {
+  //   // Call the service to get booked slots for the selected date
+  //   this.landingService.getBookedSlots(date).subscribe({
+  //     next: (res) => {
+  //       if (res.status) {
+  //         this.bookedTimes = res.bookedTimes;
+  //         this.availableTimes = res.remainingTimes;
+  //         // // Remove booked times from the available times
+  //         // this.availableTimes = this.availableTimes.filter(time => !this.bookedTimes.includes(this.convertTo24HourFormat(time)));
+  //          // Filter available times
+  //       const finalAvailableTimes = this.availableTimes.filter(time =>
+  //         !this.bookedTimes.includes(this.convertTo24HourFormat(time))
+  //       );
+
+  //       // Update the selected day's slot text
+  //       this.days = this.days.map(day => {
+  //         if (day.day.toString() === date) {
+  //           const slotCount = finalAvailableTimes.length;
+  //           const isAvailable = slotCount > 0;
+
+  //           return {
+  //             ...day,
+  //             available: isAvailable,
+  //             slotsText: isAvailable ? `${slotCount} slot${slotCount > 1 ? 's' : ''}` : '—',
+  //             slotsClass: isAvailable ? 'green' : 'gray'
+  //           };
+  //         }
+  //         return day;
+  //       });
+
+  //       } else {
+  //         console.error('Failed to fetch booked slots');
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error fetching booked slots:', err);
+  //     }
+  //   });
+  // }
+
+  closeFinalStatusPopup(): void {
+    this.showFinalStatusPopup = false;
+    this.cdr.detectChanges()
+  }
+
+
+  convertTo12HourFormat(time: string): string {
+    const [hourStr, minute, _] = time.split(':'); // handle "14:30:00"
+    let hour = parseInt(hourStr, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour > 12) {
+      hour -= 12;
+    } else if (hour === 0) {
+      hour = 12;
+    }
+
+    return `${hour}:${minute} ${period}`;
+  }
+
+
+
+
+
+  loadAvailableTimesForDate(date: string): void {
+    this.landingService.getBookedSlots(date).subscribe({
+      next: (res) => {
+        if (res.status) {
+          // Convert booked times from 24-hour to 12-hour format
+          this.bookedTimes = res.bookedTimes.map((time: string) =>
+            this.convertTo12HourFormat(time)
+          );
+
+          this.availableTimes = res.remainingTimes;
+
+          const finalAvailableTimes = this.availableTimes.filter(
+            time => !this.bookedTimes.includes(time)
+          );
+
+          // Update the selected day's slot text
+          this.days = this.days.map(day => {
+            if (day.fullDate === date) {
+              const slotCount = finalAvailableTimes.length;
+              const isAvailable = slotCount > 0;
+
+              return {
+                ...day,
+                available: isAvailable,
+                slotsText: isAvailable ? `${slotCount} slot${slotCount > 1 ? 's' : ''}` : '—',
+                slotsClass: isAvailable ? 'green' : 'gray'
+              };
+            }
+            return day;
+          });
+        } else {
+          console.error('Failed to fetch booked slots');
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching booked slots:', err);
+      }
+    });
+  }
+
+
+
+  convertTo24HourFormat(time: string): string {
+    const [hour, minute, period] = time.split(/[:\s]/);
+    let newHour = parseInt(hour, 10);
+
+    if (period === 'PM' && newHour !== 12) {
+      newHour += 12;
+    }
+    if (period === 'AM' && newHour === 12) {
+      newHour = 0;
+    }
+
+    return `${newHour.toString().padStart(2, '0')}:${minute}`;
+  }
+
+
+  // selectDay(day: number): void {
+  //   const selected = this.days.find(d => d.day === day);
+  //   if (selected?.available) {
+  //     this.selectedDay = day;
+  //   }
+  // }
+
+  // selectTime(time: string): void {
+  //   this.selectedTime = time;
+  // }
+
+  closePopup() {
+    console.log("time popup")
+    this.showDateTimePopup = false;
+    this.cdr.detectChanges()
+  }
+
+  submitBooking() {
+    alert("Appointment booked!");
+    this.closePopup();
+  }
+
+  scrollDays(direction: 'left' | 'right') {
+    const scrollAmount = 100; // pixels
+    const container = this.daysWrapper.nativeElement;
+    if (direction === 'left') {
+      container.scrollLeft -= scrollAmount;
+    } else {
+      container.scrollLeft += scrollAmount;
+    }
+  }
+
+
+  openDateTimePopup(): void {
+    this.bookingError = '';
+    if (!this.name || !this.email || !this.phone) {
+      this.bookingError = 'Please fill name and email before booking.';
+      return;
+    }
+    this.showDateTimePopup = true;
+
+    this.landingService.getAvailableSlotsForMonth().subscribe(
+      (response) => {
+        if (response.status) {
+          this.days = response.days.map((day: any) => ({
+            weekday: day.weekday,
+            day: day.date,
+            fullDate: day.fullDate,
+            slotsText: `${day.freeSlots} Slots`,
+            slotsClass: day.freeSlots > 0 ? 'available' : 'full',
+            available: day.freeSlots > 0
+          }));
+        }
+      },
+      (error) => {
+        console.error('Error fetching available slots:', error);
+      }
+    );
+
+  }
+
+  closeDateTimePopup(): void {
+
+    console.log("CLose SETTIme Call")
+    this.showDateTimePopup = false;
+    this.date = '';
+    this.time = '';
+  }
+
+  closeConfirmPopup(): void {
+    this.showConfirmPaymentPopup = false;
+    this.bookingLoading = false;
+
+  }
+
+  // proceedToPayment(): void {
+  //   this.showConfirmPaymentPopup = false;
+
+  //   // Call SubPaisa payment integration here
+  //   this.startRazorpayPayment(this.pendingBookingData);
+  // }
+
+
+  // startRazorpayPayment(bookingData: any): void {
+  //   const options: any = {
+  //     key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
+  //     amount: bookingData.amount * 100, // in paise
+  //     currency: 'INR',
+  //     name: 'Sunra Softech Pvt Ltd',
+  //     description: 'Booking Payment',
+  //     handler: (response: any) => {
+  //       // On payment success
+  //       console.log('Payment Success:', response);
+  //       // You can store payment_id, signature etc. if needed
+  //       bookingData.paymentId = response.razorpay_payment_id;
+  //       this.createBooking(bookingData);
+  //     },
+  //     prefill: {
+  //       name: bookingData.name,
+  //       email: bookingData.email,
+  //       contact: bookingData.phone
+  //     },
+  //     notes: {
+  //       bookingTime: `${bookingData.date} ${bookingData.time}`
+  //     },
+  //     theme: {
+  //       color: '#3399cc'
+  //     }
+  //   };
+
+  //   const rzp = new Razorpay(options);
+  //   rzp.open();
+
+  //   rzp.on('payment.failed', (response: any) => {
+  //     console.error('Payment Failed:', response.error);
+  //     this.bookingError = 'Payment failed. Please try again.';
+  //   });
+  // }
+
+
+
+  // Component code
+
+  proceedToPayment(): void {
+    this.showConfirmPaymentPopup = false;
+
+    this.landingService.createRazorpayOrder(this.pendingBookingData.amount).subscribe({
+      next: (res) => {
+        if (res.status && res.order) {
+          this.startRazorpayPayment(res.order, this.pendingBookingData);
+        } else {
+          this.bookingError = 'Error creating Razorpay order.';
+          this.showErrorSnackbar(this.bookingError);
+          this.bookingLoading = false;
+
+        }
+      },
+      error: (err) => {
+        // Display error message from backend (or fallback message)
+        this.bookingError = err || 'Error initiating payment.';
+        this.showErrorSnackbar(this.bookingError);
+        this.bookingLoading = false;
+
+      }
+    });
+  }
+
+  // Method to show error using Snackbar (or alert)
+  showErrorSnackbar(message: string): void {
+    // Replace with your actual snackbar implementation
+    alert(message); // Simple alert for demonstration
+  }
+
+
+  startRazorpayPayment(order: any, bookingData: any): void {
+    const options: any = {
+      key: 'rzp_live_0cClDW4rSilf2w', // This is fine to keep on the frontend
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Sunra Softech Pvt Ltd',
+      description: 'Booking Payment',
+      order_id: order.id,
+      handler: (response: any) => {
+        // On payment success
+        console.log('Payment Success:', response);
+
+        // Send payment details to backend for verification
+        this.verifyPayment(response, bookingData);
+      },
+      prefill: {
+        name: bookingData.name,
+        email: bookingData.email,
+        contact: bookingData.phone
+      },
+      notes: {
+        bookingTime: `${bookingData.date} ${bookingData.time}`
+      },
+      theme: {
+        color: '#3399cc'
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+    rzp.on('payment.failed', (response: any) => {
+      console.error('Payment Failed:', response.error);
+      this.bookingError = 'Payment failed. Please try again.';
+    });
+
+    // Set a fallback timeout in case the user closes the Razorpay window with confirmation
+    setTimeout(() => {
+      if (this.bookingLoading) {
+        console.log('Razorpay screen was likely closed or payment not completed');
+        this.bookingLoading = false; // Reset loading state after a delay
+      }
+    }, 5000); // Wait 5 seconds before resetting the loading state
+  }
+
+  verifyPayment(response: any, bookingData: any): void {
+    const paymentPayload = {
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
+    };
+
+    this.landingService.verifyRazorpayPayment(paymentPayload).subscribe({
+      next: (verifyRes) => {
+        if (verifyRes.status) {
+          // Payment is verified, proceed with booking
+          bookingData.paymentId = response.razorpay_payment_id;
+          this.createBooking(bookingData);
+        } else {
+          this.bookingError = 'Payment verification failed.';
+        }
+      },
+      error: () => {
+        this.bookingError = 'Payment verification failed.';
+      }
+    });
+  }
+
+  openFinalPopup():void{
+
+    console.log("Call final popup")
+    this.bookingSuccessFlag = true;
+    this.showFinalStatusPopup = true;
+    this.cdr.detectChanges()
+  }
+
+  isLoaderOpen():void{
+    this.isLoading = true; // Start loader
+    this.cdr.detectChanges()
+  }
+
+  isLoaderClose():void{
+    this.isLoading = false; // Start loader
+    this.cdr.detectChanges()
+  }
+
+
+
+  createBooking(bookingData: any): void {
+    this.bookingLoading = true;
+    // this.showDateTimePopup = false;
+   this.isLoaderOpen();
+    
+    this.landingService.createBooking(bookingData).subscribe({
+      next: (res) => {
+        this.isLoaderClose() // Stop loader
+        this.bookingLoading = false;
+        if (res.status) {
+          this.bookingSuccess = 'Booking successful!';
+          // this.showDateTimePopup = false;
+          // this.closeDateTimePopup()
+          // this.date = '';
+          // this.time = '';
+          // this.bookingSuccessFlag = true;
+          // // this.showFinalStatusPopup = true; 
+          // setTimeout(() =>  this.showFinalStatusPopup = true, 200);
+          this.closePopup();
+          // this.openFinalPopup()
+          setTimeout(() => this.openFinalPopup(), 200);
+
+          this.resetAll();
+          // setTimeout(() => this.closeDateTimePopup(), 100);
+        } else {
+          this.bookingSuccessFlag = false;
+          this.showFinalStatusPopup = true; // Show popup on error
+          this.bookingError = 'Booking failed. Try again.';
+        }
+      },
+      error: (err) => {
+        this.bookingLoading = false;
+        this.bookingError = 'Something went wrong.';
+        console.error(err);
+      }
+    });
+  }
+
+
+  bookAppointment(): void {
+
+    console.log("this.date", this.date)
+    console.log("this.date", this.time)
+
+    if (!this.date || !this.time) {
+      alert("Please select date and time.")
+      this.bookingError = 'Please select date and time.';
+      return;
+    }
+
+    const bookingData = {
+      name: this.name,
+      email: this.email,
+      phone: this.phone,
+      message: this.message,
+      date: this.date,
+      time: this.time
+    };
+
+    // Save bookingData for payment confirmation
+    this.pendingBookingData = bookingData;
+
+    this.bookingLoading = true;
+    this.bookingError = '';
+    // this.bookingSuccess = '';
+
+    this.showConfirmPaymentPopup = true;
+
+
+    this.landingService.getSubscriptionAmount().subscribe({
+      next: (res) => {
+        console.log("Subscription Amount:", res);
+        this.amount = res.data[0].amount;
+        this.pendingBookingData.amount = this.amount;
+      },
+      error: (err) => {
+        console.error("Error fetching subscription amount", err);
+      }
+    });
+
+    // this.landingService.createBooking(bookingData).subscribe({
+    //   next: (res) => {
+    //     this.bookingLoading = false;
+    //     if (res.status) {
+    //       this.bookingSuccess = 'Booking successful!';
+    //       this.resetAll();
+    //       setTimeout(() => this.closeDateTimePopup(), 1000);
+    //     } else {
+    //       this.bookingError = 'Booking failed. Try again.';
+    //     }
+    //   },
+    //   error: (err) => {
+    //     this.bookingLoading = false;
+    //     this.bookingError = 'Something went wrong.';
+    //     console.error(err);
+    //   }
+    // });
+  }
+
+  resetAll(): void {
+    this.name = '';
+    this.email = '';
+    this.phone = '';
+    this.message = '';
+    this.date = '';
+    this.time = '';
+  }
+
+
+
+
+
+
+  fetchNavBar(): void {
+    this.landingService.getNavbarOption().subscribe({
+      next: (res) => {
+        if (res.status) {
+          //  Filter only items where name is not null and is_deleted = 0
+          this.navbarOptions = res.navbarOptions.filter(
+            (opt: NavbarItem) => opt.name !== null && opt.is_deleted === 0
+          ).map((opt: NavbarItem) => ({
+            ...opt,
+            url: opt.url || `#${opt.name?.toLowerCase().replace(/\s+/g, '')}` // fallback url
+          }));
+
+          this.brandDetails = res.brandDetails;
+          this.brandLogoUrl = res.brandDetails?.brandLogo
+            ? `${this.baseUrl}${res.brandDetails.brandLogo}`
+            : null;
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load navbar options', err);
+      }
+    });
+  }
+
+
+  fetchLandingPageInfo(): void {
+    this.landingService.getLandingPageInfo().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          const data = res.data[0];
+          this.headingLine1 = this.getHeadingPart(data.heading, 0);
+          this.headingLine2 = this.getHeadingPart(data.heading, 1);
+          this.subheading = data.subheading;
+          this.buttonText = data.button_text;
+
+          // Dynamically setting the URLs for icons/images using the correct API keys
+          this.icon_1_url = data?.icon_1
+            ? `${this.baseUrl}${data?.icon_1}`
+            : null;
+          this.icon_2_url = data?.icon_2
+            ? `${this.baseUrl}${data?.icon_2}`
+            : null;
+          this.icon_3_url = data?.icon_3
+            ? `${this.baseUrl}${data?.icon_3}`
+            : null;
+          this.icon_4_url = data?.icon_4
+            ? `${this.baseUrl}${data?.icon_4}`
+            : null;
+
+          // Log the URLs
+          console.log('icon_1_url:', this.icon_1_url);
+          console.log('icon_2_url:', this.icon_2_url);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching landing page info', err);
+      }
+    });
+  }
+
+  // Utility to split heading into two parts
+  getHeadingPart(heading: string, part: number): string {
+    const words = heading?.split(' ') || [];
+    const mid = Math.ceil(words.length / 2);
+    return part === 0
+      ? words.slice(0, mid).join(' ')
+      : words.slice(mid).join(' ');
+  }
+
+  // New method to fetch and set banners
+  fetchLandingPageBanners(): void {
+    this.landingService.getLandingPageBanners().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.banners = res.data; // Store the banners data
+          console.log('Landing page banners:', this.banners);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching landing page banners', err);
+      }
+    });
+  }
+
+
+  scrollToSection(event: Event, sectionId: string | null): void {
+    if (sectionId?.startsWith('#')) {
+      event.preventDefault();
+      console.log('Scrolling to:', sectionId);
+      const element = document.querySelector(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      console.log('Invalid or missing section ID:', sectionId);
+    }
+    this.isSliderOpen = false;
+  }
+
+  fetchFeaturePage(): void {
+    this.landingService.getFeaturePage().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.features = res.data;
+          console.log('Feature Data:', this.features);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching feature page data', err);
+      }
+    });
+  }
+
+  fetchAboutPageData(): void {
+    this.landingService.getAboutPage().subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.aboutPageData = res.data;
+
+          // Split the description into four lines for display
+          const description = this.aboutPageData.description || '';
+          this.aboutPageData.formattedDescription = this.splitDescriptionIntoLines(description);
+          console.log('About Page Data:', this.aboutPageData);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching About page data', err);
+      }
+    });
+  }
+
+  splitDescriptionIntoLines(description: string): string {
+    const words = description.split(' ');
+    const lines: string[] = [];
+    const wordsPerLine = Math.ceil(words.length / 4); // Divide total words into 4 lines
+
+    for (let i = 0; i < 4; i++) {
+      const lineWords = words.slice(i * wordsPerLine, (i + 1) * wordsPerLine);
+      if (lineWords.length) {
+        lines.push(lineWords.join(' '));
+      }
+    }
+
+    return lines.join('<br>');
+  }
+
+  fetchClientPageContent(): void {
+    this.landingService.getClientPageContent().subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.clientHeading = res.data.heading;
+          this.clientSubheading = res.data.subheading;
+          console.log('Client Page Data:', res.data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching client page content', err);
+      }
+    });
+  }
+
+  fetchClientLogos(): void {
+    this.landingService.getClientLogos().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.clientLogos = res.data.map((logo: any) => `${this.baseUrl}${logo.logo_url}`);
+          console.log('Client logos:', this.clientLogos);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching client logos:', err);
+      }
+    });
+  }
+
+
+  // fetchAllProcessSteps(): void {
+  //   this.landingService.getAllProcessSteps().subscribe({
+  //     next: (res) => {
+  //       if (res.status && res.data?.length > 0) {
+  //         this.processSteps = res.data;
+  //         console.log('Process Steps:', this.processSteps);
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error fetching process steps', err);
+  //     }
+  //   });
+  // }
+
+
+  fetchAllProcessSteps(): void {
+    this.landingService.getAllProcessSteps().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.processSteps = res.data;
+
+          this.groupedProcessSteps = this.chunkArray(this.processSteps, 2);
+          console.log('Grouped Process Steps:', this.groupedProcessSteps);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching process steps', err);
+      }
+    });
+  }
+
+  // Helper to group steps into rows of 2
+  chunkArray(arr: any[], chunkSize: number): any[][] {
+    const result = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+      result.push(arr.slice(i, i + chunkSize));
+    }
+    return result;
+  }
+
+  // Return step number from index
+  stepNumber(step: any): number {
+    return this.processSteps.findIndex(s => s.id === step.id) + 1;
+  }
+
+  fetchCaseStudyTitle(): void {
+    this.landingService.getCaseStudies().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.caseStudyTitle = res.data[0].title || 'Case Studies';
+          console.log('Case Study Title:', this.caseStudyTitle);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching case study title', err);
+      }
+    });
+  }
+
+
+  fetchCaseStudyImages(): void {
+    this.landingService.getCaseStudyImages().subscribe({
+      next: (res) => {
+        if (res.status && res.data?.length > 0) {
+          this.caseStudyImages = res.data.map((img: any) => `${this.baseUrl}${img.image_url}`);
+          console.log('Case Study Images:', this.caseStudyImages);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching case study images:', err);
+      }
+    });
+  }
+
+  fetchContactPage(): void {
+    this.landingService.getContactPage().subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.contactHeading = res.data.heading;
+          this.contactSubheading = res.data.subheading;
+          this.contactButtonText = res.data.button_text;
+          this.contactImageUrl = res.data.image_url
+            ? `${this.baseUrl}${res.data.image_url}`
+            : null;
+
+          console.log('Contact Page:', res.data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching contact page data', err);
+      }
+    });
+  }
+
+  fetchTechMainPage(): void {
+    this.landingService.getTechMainPage().subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.techMainPage = res.data;  // Store the fetched data
+          console.log('Tech Main Page Data:', this.techMainPage);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching Tech Main Page data', err);
+      }
+    });
+  }
+
+
+  fetchAllTech(): void {
+    this.landingService.getAllTech().subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          const rawData = Array.isArray(res.data) ? res.data : [res.data]; // handle single or array
+          this.techList = rawData.filter((tech: any) => tech.is_deleted === 0);
+          this.groupedTechList = this.chunkArray(this.techList, 2); // Group in twos
+          console.log('Grouped Tech List:', this.groupedTechList);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching tech list', err);
+      }
+    });
+  }
+
+
+  fetchFaqPage(): void {
+    this.landingService.getFaqPage().subscribe({
+      next: (res) => {
+        if (res.status) {
+          this.faqTitle = res.data.title;
+          this.faqSubheading = res.data.subheading;
+          this.faqs = res.data.questions || []; // assuming 'questions' is an array of { question, answer }
+          console.log('FAQ Page Data:', res.data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching FAQ page data', err);
+      }
+    });
+  }
+
+  fetchQuestionAndAnswer(): void {
+    this.landingService.getFaqQnsAns().subscribe((res) => {
+      if (res.status && res.data) {
+        this.faqsData = res.data;
+      }
+    });
+  }
+
+
+}

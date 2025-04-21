@@ -1,0 +1,645 @@
+<!-- Navbar Container -->
+<div class="navbar-container">
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="logo-container">
+            <img
+                *ngIf="brandLogoUrl"
+                [src]="brandLogoUrl"
+                alt="Logo"
+                class="logo-img" />
+
+            <div class="logo">
+                <span>{{ brandDetails?.brandName || 'textexpert' }}</span>
+            </div>
+        </div>
+
+        <ul class="nav-links" id="navLinks" *ngIf="!isMobile">
+            <li *ngFor="let item of navbarOptions">
+                <a
+                    href="{{ item.url || '#' }}"
+                    [ngClass]="{ 'pricing-btn': item.type === 'button' }"
+                    (click)="scrollToSection($event, item.url)">
+                    {{ item.name }}
+                </a>
+            </li>
+        </ul>
+
+        <!-- Mobile Slider Menu -->
+        <div class="mobile-slider" [class.open]="isSliderOpen">
+            <ul>
+                <li *ngFor="let item of navbarOptions">
+                    <a href="{{ item.url || '#' }}"
+                        (click)="scrollToSection($event, item.url)">
+                        {{ item.name }}
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Mobile Icon -->
+        <!-- <div class="home-icon" id="homeIcon">
+            <img src="../../assets/Group 8.png" alt="Home Icon" />
+        </div> -->
+
+        <!-- Mobile Icon -->
+        <div class="home-icon" id="homeIcon" (click)="toggleSlider()">
+            <img src="../../assets/Group 8.png" alt="Home Icon" />
+        </div>
+
+    </header>
+
+</div>
+
+<div class="mask-group-container">
+    <img *ngIf="icon_1_url" [src]="icon_1_url" alt="Icon 1"
+        class="hero_maskGroup" />
+    <img *ngIf="icon_2_url" [src]="icon_2_url" alt="Icon 2"
+        class="hero_maskGroup second-image" />
+</div>
+
+<section class="hero"
+    style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+    <h1 class="hero-heading">
+
+        <span class="gradient-text">{{ headingLine1 }}</span><br />
+        <span class="gradient-text">{{ headingLine2 }}</span>
+
+    </h1>
+    <p class="hero-subheading">{{ subheading }}</p>
+    <div class="hero-layout-row">
+        <img *ngIf="icon_3_url" [src]="icon_3_url" alt="Icon 3"
+            class="icon-left" />
+
+        <button class="hero-cta">
+            <span class="hero-cta-text">{{ buttonText }}</span>
+        </button>
+        <img *ngIf="icon_4_url" [src]="icon_4_url" alt="Icon 4"
+            class="icon-right" />
+    </div>
+</section>
+
+<section class="slider">
+    <button class="prev">&#10094;</button>
+    <div class="slider-container">
+        <ng-container *ngFor="let banner of banners">
+
+            <video
+                #videoRef
+                *ngIf="banner.type === 'video'"
+                [src]="baseUrl + banner.file_url"
+                class="slider-video"
+                autoplay
+                loop
+                playsinline></video>
+
+        </ng-container>
+    </div>
+    <button class="next">&#10095;</button>
+</section>
+
+<!-- <div class="ellipse">
+    <img src="../../assets/Ellipse_18.png" alt="Logo" class="ellipse" />
+</div> -->
+
+<!-- Features Section -->
+<section id="features">
+    <div *ngIf="features.length > 0" class="feature-header">
+        <h2>{{ features[0]?.heading }}</h2>
+        <p>{{ features[0]?.subheading }}</p>
+    </div>
+
+    <div class="feature-items">
+        <div *ngFor="let feature of features" class="feature-card-wrapper">
+            <div class="feature-card">
+                <div class="icon-circle">
+                    <img *ngIf="feature.icon_url"
+                        [src]="baseUrl + feature.icon_url" alt="Feature Icon" />
+                </div>
+            </div>
+            <p class="feature-label">{{ feature.label }}</p>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about">
+    <div class="about-container">
+        <div class="about-text">
+            <h2>{{ aboutPageData.heading }}</h2>
+            <div style="color: #B5B5B5;"
+                [innerHTML]="aboutPageData.formattedDescription"></div>
+            <div class="experience-box">
+                <div class="experience-content">
+                    <span class="experience-count">{{
+                        aboutPageData.experience_count }}+</span>
+                    <span class="experience-label">{{
+                        aboutPageData.experience_label }}</span>
+                </div>
+
+                <div class="user-badges">
+                    <div class="badge">R</div>
+                    <div class="badge">T</div>
+                    <div class="badge">U</div>
+                </div>
+            </div>
+        </div>
+        <div class="about-image" *ngIf="aboutPageData.image_url">
+            <div class="red-bg"></div>
+            <img [src]="baseUrl + aboutPageData.image_url" alt="About Image" />
+        </div>
+    </div>
+</section>
+
+<!-- Clients Section -->
+<section id="clients">
+    <div class="client-text">
+        <h2>{{ clientHeading }}</h2>
+        <p>{{ clientSubheading }}</p>
+    </div>
+
+    <div class="client-logos-wrapper">
+
+        <div class="client-logos row row-one">
+            <img *ngFor="let logo of clientLogos" [src]="logo"
+                alt="Client Logo" />
+            <img *ngFor="let logo of clientLogos" [src]="logo"
+                alt="Client Logo" />
+        </div>
+
+        <div class="client-logos row row-two">
+            <img *ngFor="let logo of clientLogos" [src]="logo"
+                alt="Client Logo" />
+            <img *ngFor="let logo of clientLogos" [src]="logo"
+                alt="Client Logo" />
+        </div>
+    </div>
+</section>
+
+<!-- Process Section -->
+<!-- <section id="process" class="process-section">
+    <h2 class="section-title">How It Works</h2>
+
+    <div class="timeline-grid">
+        
+        <div class="timeline-row">
+            <div *ngFor="let step of groupedProcessSteps[0]"
+                class="timeline-item">
+                <div class="step-content">
+                    <div class="step-icon-box">
+                        <img [src]="baseUrl + step.icon_url" alt="Icon"
+                            class="step-icon" />
+                    </div>
+                    <div class="step-text">
+                        <h3>{{ step.title }}</h3>
+                        <ul>
+                            <li *ngFor="let point of step.points">
+                                {{ point.point_text }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="timeline-numbers">
+            <ng-container *ngFor="let step of processSteps; let i = index">
+                <div class="step-number-box">
+                    <div class="circle-number">{{ i + 1 }}</div>
+                    <div *ngIf="i < processSteps.length - 1"
+                        class="step-line"></div>
+                </div>
+            </ng-container>
+        </div>
+
+        
+        <div class="timeline-row staggered">
+            <div *ngFor="let step of groupedProcessSteps[1]"
+                class="timeline-item">
+                <div class="step-content">
+                    <div class="step-icon-box">
+                        <img [src]="baseUrl + step.icon_url" alt="Icon"
+                            class="step-icon" />
+                    </div>
+                    <div class="step-text">
+                        <h3>{{ step.title }}</h3>
+                        <ul>
+                            <li *ngFor="let point of step.points">
+                                {{ point.point_text }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> -->
+
+<section id="process" class="process-section">
+    <h2 class="section-title">How It Works</h2>
+
+    <div class="timeline-grid">
+
+        <!-- Row 1 -->
+        <div class="timeline-row">
+            <div
+                *ngFor="let step of groupedProcessSteps[0]; let i = index"
+                class="timeline-item"
+                [attr.data-step]="i + 1">
+                <div class="step-content">
+                    <div class="step-icon-box">
+                        <img [src]="baseUrl + step.icon_url" alt="Icon"
+                            class="step-icon" />
+                    </div>
+                    <div class="step-text">
+                        <h3>{{ step.title }}</h3>
+                        <ul>
+                            <li *ngFor="let point of step.points">{{
+                                point.point_text }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horizontal Step Numbers (desktop only) -->
+        <div class="timeline-numbers">
+            <ng-container *ngFor="let step of processSteps; let i = index">
+                <div class="step-number-box">
+                    <div class="circle-number">{{ i + 1 }}</div>
+                    <div *ngIf="i < processSteps.length - 1"
+                        class="step-line"></div>
+                </div>
+            </ng-container>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="timeline-row staggered">
+            <div
+                *ngFor="let step of groupedProcessSteps[1]; let i = index"
+                class="timeline-item"
+                [attr.data-step]="groupedProcessSteps[0].length + i + 1">
+                <div class="step-content">
+                    <div class="step-icon-box">
+                        <img [src]="baseUrl + step.icon_url" alt="Icon"
+                            class="step-icon" />
+                    </div>
+                    <div class="step-text">
+                        <h3>{{ step.title }}</h3>
+                        <ul>
+                            <li *ngFor="let point of step.points">{{
+                                point.point_text }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Case Study Section -->
+<section id="casestudy">
+    <h2>{{ caseStudyTitle }}</h2>
+
+    <div class="case-study-images">
+        <img *ngFor="let image of caseStudyImages" [src]="image"
+            alt="Case Study Image" class="case-study-img" />
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="contact-section">
+    <div class="contact-wrapper">
+        <!-- Left Side -->
+        <div class="contact-content">
+            <h2 class="contact-heading">{{ contactHeading }}</h2>
+            <p class="contact-subheading">{{ contactSubheading }}</p>
+            <img *ngIf="contactImageUrl" [src]="contactImageUrl"
+                alt="Contact Image" class="contact-image" />
+        </div>
+
+        <!-- Right Side: Form -->
+        <div class="contact-form-container">
+            <form>
+                <label for="fullName">Full Name</label>
+                <input id="fullName" name="name" type="text"
+                    class="contact-input" [(ngModel)]="name" />
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email"
+                    class="contact-input" [(ngModel)]="email" />
+
+                <label for="phone">Phone Number</label>
+                <input id="phone" name="phone" type="tel" class="contact-input"
+                    [(ngModel)]="phone" />
+
+                <label for="message">Requirement</label>
+                <textarea id="message" name="message" class="contact-textarea"
+                    [(ngModel)]="message"></textarea>
+
+                <button type="submit" class="contact-button"
+                    (click)="openDateTimePopup()">
+                    <span class="contact-button-text">{{ contactButtonText
+                        }}</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- DATE & TIME POPUP -->
+<div *ngIf="showDateTimePopup" (click)="closePopup()" class="overlay">
+    <div class="popup" (click)="$event.stopPropagation()">
+        <h2>Choose slot</h2>
+
+        <div class="select-wrapper">
+            <select [(ngModel)]="selectedMonth">
+                <option *ngFor="let month of availableMonths" [ngValue]="month">
+                    {{ month }}
+                </option>
+                <!-- You can dynamically populate this -->
+            </select>
+        </div>
+
+        <div class="days-container">
+            <button class="arrow left"
+                (click)="scrollDays('left')">&#8249;</button>
+
+            <div class="days-wrapper" #daysWrapper>
+                <div
+                    *ngFor="let d of days"
+                    class="day"
+                    [ngClass]="{ 'active': d.day === selectedDay, 'gray': !d.available }"
+                    (click)="selectDay(d.day)">
+
+                    <div>{{ d.weekday }}</div>
+                    <div><strong>{{ d.day }}</strong></div>
+
+                    <div class="slot-info">
+                        <div class="slot-indicator"
+                            [ngClass]="d.slotsClass"></div>
+                        <div class="slots" [ngClass]="d.slotsClass">{{
+                            d.slotsText }}</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <button class="arrow right"
+                (click)="scrollDays('right')">&#8250;</button>
+        </div>
+
+        <div class="popup-header">
+            <span>Choose Time</span>
+            <span>60 min meeting</span>
+        </div>
+
+        <div class="times">
+            <div
+                *ngFor="let t of availableTimes"
+                class="time-slot"
+                [ngClass]="{
+                            'active': t === selectedTime,
+                            'booked': bookedTimes.includes(t),
+                            'available': !bookedTimes.includes(t)
+                        }"
+                (click)="!bookedTimes.includes(t) && selectTime(t)">
+                {{ t }}
+            </div>
+        </div>
+
+        <button class="btn" (click)="bookAppointment()"
+            [disabled]="bookingLoading">
+            {{ bookingLoading ? 'Booking...' : 'Book your Appointment' }}
+        </button>
+    </div>
+</div>
+
+<!-- Payment Confirmation Popup -->
+<div *ngIf="showConfirmPaymentPopup" class="overlay"
+    (click)="closeConfirmPopup()">
+    <div class="confirm-popup" (click)="$event.stopPropagation()">
+        <h2>Confirm Subscription</h2>
+        <p>Proceed to pay {{amount}} ₹ for Day plan?</p>
+
+        <button class="confirm-btn" (click)="proceedToPayment()">Proceed to
+            Pay</button>
+        <button class="cancel-btn" (click)="closeConfirmPopup()">Cancel</button>
+    </div>
+</div>
+
+<div class="fullscreen-loader" *ngIf="isLoading">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <p>Please wait...</p>
+    </div>
+</div>
+
+<!-- Final Booking Status Popup -->
+<div *ngIf="showFinalStatusPopup" class="overlay"
+    (click)="closeFinalStatusPopup()">
+    <div class="final-status-popup" (click)="$event.stopPropagation()">
+        <span class="close-icon"
+            (click)="closeFinalStatusPopup()">&#10006;</span>
+        <h2>{{ bookingSuccessFlag ? 'Booking Successful!' : 'Booking Failed'
+            }}</h2>
+        <p>
+            {{ bookingSuccessFlag
+            ?
+            '🎉 Your booking is confirmed! A confirmation email has been sent to you. We look forward to seeing you!'
+            :
+            '⚠️ Something went wrong while processing your booking. Please try again or reach out to our support team for assistance.'
+            }}
+        </p>
+        <button class="ok-btn" (click)="closeFinalStatusPopup()">Okay</button>
+    </div>
+</div>
+
+<!-- DATE & TIME POPUP -->
+<!-- <div *ngIf="showDateTimePopup" class="modal">
+    <div class="modal-content">
+        <h3>Select Date & Time</h3>
+
+        <input type="date" [(ngModel)]="date" />
+        <input type="time" [(ngModel)]="time" />
+
+        <div *ngIf="bookingError" class="error">{{ bookingError }}</div>
+        <div *ngIf="bookingSuccess" class="success">{{ bookingSuccess }}</div>
+
+        <button (click)="bookAppointment()" [disabled]="bookingLoading">
+            {{ bookingLoading ? 'Booking...' : 'Book' }}
+        </button>
+        <button (click)="closeDateTimePopup()">Cancel</button>
+    </div>
+</div> -->
+
+<!-- Tech Expert Page -->
+<section id="tech-expert">
+    <div class="tech-container" *ngIf="techMainPage">
+        <h2>{{ techMainPage.main_text }}</h2>
+    </div>
+    <div class="tech-grid">
+        <div class="tech-items">
+            <div *ngFor="let tech of techList; let i = index" class="tech-item">
+                <div class="techImage">
+                    <img *ngIf="tech.tech_image"
+                        [src]="baseUrl + tech.tech_image" alt="Tech Icon" />
+                </div>
+                <div class="tech-name">
+                    <p class="text-sm">{{ tech.tech_name }}</p>
+                </div>
+            </div>
+        </div>
+        <img *ngIf="techMainPage.main_image_url"
+            [src]="baseUrl + techMainPage.main_image_url" alt="Tech Main Image"
+            class="tech-main-image" style="margin-top: -120px;" />
+    </div>
+
+</section>
+
+<!-- Faqs page -->
+<section id="faqs">
+    <div class="faq-container">
+        <h2 class="faq-title">{{ faqTitle }}</h2>
+        <p class="faq-subheading">{{ faqSubheading }}</p>
+
+        <div *ngFor="let item of faqs" class="faq-item">
+            <h4 class="faq-question">{{ item.question }}</h4>
+            <p class="faq-answer">{{ item.answer }}</p>
+        </div>
+    </div>
+
+    <div class="questionAndAnswerContainer">
+        <div
+            class="questionAndAnswer"
+            *ngFor="let item of faqsData; let i = index"
+            [class.expanded]="expandedIndex === i">
+            <div class="faq-header" (click)="toggleAnswer(i)">
+                <h4 class="faq-question">{{ item.question }}</h4>
+                <span class="arrow-icon">
+                    <i
+                        [ngClass]="expandedIndex === i ? 'arrow-up' : 'arrow-down'"></i>
+                </span>
+            </div>
+            <p class="faq-answer" *ngIf="expandedIndex === i || !isMobile">{{
+                item.answer }}</p>
+        </div>
+    </div>
+
+</section>
+
+<!-- <section id="footer">
+    <div class="footer-container">
+        <div class="firstBox">
+
+        </div>
+    </div>
+</section> -->
+
+<!-- <div style="display: flex; flex-direction: row;">
+<div class="footer-left">
+    <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+        industry</p>
+    <div class="social-icons">
+        <i class="fab fa-youtube"></i>
+        <i class="fab fa-facebook-f"></i>
+        <i class="fab fa-linkedin-in"></i>
+        <i class="fab fa-instagram"></i>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-container">
+        
+
+        <div class="footer-links">
+            <h4>Links</h4>
+            <ul>
+                <li>Link1</li>
+                <li>Link2</li>
+                <li>Link3</li>
+                <li>Link4</li>
+                <li>Link5</li>
+            </ul>
+        </div>
+
+        <div class="footer-links">
+            <h4>Links</h4>
+            <ul>
+                <li>Link1</li>
+                <li>Link2</li>
+                <li>Link3</li>
+                <li>Link4</li>
+                <li>Link5</li>
+            </ul>
+        </div>
+
+        <div class="footer-contact">
+            <h4>Contact</h4>
+            <ul>
+                <li><i class="fas fa-map-marker-alt"></i> Lorem Ipsum is simply
+                    dummy text of the printing and typesetting industry</li>
+                <li><i class="fas fa-phone-alt"></i> +91 8724982483</li>
+                <li><i class="fas fa-envelope"></i> email@email.com</li>
+            </ul>
+        </div>
+    </div>
+    
+</footer>
+
+</div>
+<div class="footer-bottom">
+    Copyright Reserved 2024
+</div> -->
+
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-left">
+            <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                industry</p>
+            <div class="social-icons">
+                <i class="fab fa-youtube"></i>
+                <i class="fab fa-facebook-f"></i>
+                <i class="fab fa-linkedin-in"></i>
+                <i class="fab fa-instagram"></i>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <h4>Links</h4>
+            <ul>
+                <li>Link1</li>
+                <li>Link2</li>
+                <li>Link3</li>
+                <li>Link4</li>
+                <li>Link5</li>
+            </ul>
+        </div>
+
+        <div class="footer-links">
+            <h4>Links</h4>
+            <ul>
+                <li>Link1</li>
+                <li>Link2</li>
+                <li>Link3</li>
+                <li>Link4</li>
+                <li>Link5</li>
+            </ul>
+        </div>
+
+        <div class="footer-contact">
+            <h4>Contact</h4>
+            <ul>
+                <li><i class="fas fa-map-marker-alt"></i> Lorem Ipsum is simply
+                    dummy text of the printing and typesetting industry</li>
+                <li><i class="fas fa-phone-alt"></i> +91 8724982483</li>
+                <li><i class="fas fa-envelope"></i> email@email.com</li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        Copyright Reserved 2024
+    </div>
+</footer>
