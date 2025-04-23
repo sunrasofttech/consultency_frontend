@@ -106,10 +106,21 @@ export class LandingPageService {
   }
   
 
-
-  
   verifyRazorpayPayment(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment/verifyRazorpayPayment`, payload);
+  }
+
+   // New method to get footer content
+   getFooterContent(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/getFooterContent`, {});
+  }
+
+  getFooterSocailIcon(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/getFooterSocailIcon`, {});
+  }
+
+  getCaseStudyImageById(id: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/admin/getCaseStudyImageById/${id}`, {});
   }
   
 

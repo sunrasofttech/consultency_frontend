@@ -63,7 +63,8 @@ export class LandingPageComponent implements OnInit {
 
   caseStudyTitle: string = 'Case Studies'; // fallback value
 
-  caseStudyImages: string[] = [];
+  caseStudyImages: any[] = []; // or ideally use an interface (see below)
+
 
   contactHeading: string = '';
   contactSubheading: string = '';
@@ -120,8 +121,10 @@ export class LandingPageComponent implements OnInit {
   bookingSuccessFlag: boolean = false;
 
   isLoading: boolean = false;
+  footerContent: any; // Declare the footerContent property here
+  socialIcons: any[] = [];  // Array to store social icons
 
-
+  selectedImageData: any = null;
 
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
@@ -145,9 +148,12 @@ export class LandingPageComponent implements OnInit {
     this.fetchAllTech(); // Add this
     this.fetchFaqPage(); // add this
     this.fetchQuestionAndAnswer()
-
+    this.fetchFooterContent(); // Call the method when the component initializes
     this.generateUpcomingDays(14); // generate 2 weeks by default
     this.generateMonthOptions();
+
+    this.fetchFooterSocialIcons();
+
     this.isMobile = window.innerWidth <= 600;
 
     // Optional: Update on resize too
@@ -597,7 +603,7 @@ export class LandingPageComponent implements OnInit {
     });
   }
 
-  openFinalPopup():void{
+  openFinalPopup(): void {
 
     console.log("Call final popup")
     this.bookingSuccessFlag = true;
@@ -605,12 +611,12 @@ export class LandingPageComponent implements OnInit {
     this.cdr.detectChanges()
   }
 
-  isLoaderOpen():void{
+  isLoaderOpen(): void {
     this.isLoading = true; // Start loader
     this.cdr.detectChanges()
   }
 
-  isLoaderClose():void{
+  isLoaderClose(): void {
     this.isLoading = false; // Start loader
     this.cdr.detectChanges()
   }
@@ -620,8 +626,8 @@ export class LandingPageComponent implements OnInit {
   createBooking(bookingData: any): void {
     this.bookingLoading = true;
     // this.showDateTimePopup = false;
-   this.isLoaderOpen();
-    
+    this.isLoaderOpen();
+
     this.landingService.createBooking(bookingData).subscribe({
       next: (res) => {
         this.isLoaderClose() // Stop loader
@@ -970,7 +976,8 @@ export class LandingPageComponent implements OnInit {
     this.landingService.getCaseStudyImages().subscribe({
       next: (res) => {
         if (res.status && res.data?.length > 0) {
-          this.caseStudyImages = res.data.map((img: any) => `${this.baseUrl}${img.image_url}`);
+          // this.caseStudyImages = res.data.map((img: any) => `${this.baseUrl}${img.image_url}`);
+          this.caseStudyImages = res.data;
           console.log('Case Study Images:', this.caseStudyImages);
         }
       },
@@ -1056,5 +1063,46 @@ export class LandingPageComponent implements OnInit {
     });
   }
 
+  fetchFooterContent(): void {
+    this.landingService.getFooterContent().subscribe((response) => {
+      if (response.status && response.footerContent) {
+        this.footerContent = response.footerContent; // Store the footer content
+      } else {
+        console.error('Failed to retrieve footer content');
+      }
+    }, (error) => {
+      console.error('Error fetching footer content:', error);
+    });
+  }
+
+  // Function to fetch footer social icons
+  fetchFooterSocialIcons(): void {
+    this.landingService.getFooterSocailIcon().subscribe((response: any) => {
+      if (response.status) {
+        this.socialIcons = response.data;  // Store the social icons in the array
+      }
+    }, error => {
+      console.error("Error fetching social icons:", error);
+    });
+  }
+
+  openBlogPopup(id: number): void {
+    this.landingService.getCaseStudyImageById(id).subscribe({
+      next: (res) => {
+        if (res.status) {
+          this.selectedImageData = res.data;
+        }
+      },
+      error: (err) => {
+        console.error("Error fetching case study image by ID:", err);
+      }
+    });
+  }
+
+  closeBlogPopup(): void {
+    this.selectedImageData = null;
+  }
+  
+  
 
 }
