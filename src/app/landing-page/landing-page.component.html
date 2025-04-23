@@ -82,18 +82,54 @@
 <section class="slider">
     <button class="prev">&#10094;</button>
     <div class="slider-container">
-        <ng-container *ngFor="let banner of banners">
-
+        <ng-container *ngFor="let banner of banners let i = index">
             <video
                 #videoRef
                 *ngIf="banner.type === 'video'"
                 [src]="baseUrl + banner.file_url"
                 class="slider-video"
-                autoplay
+                controls
                 loop
-                playsinline></video>
+                playsinline
+                preload="auto"
+                autoplay>
+            </video>
+
+           
+            <!-- <button
+                class="play-pause-btn"
+                *ngIf="!isPlaying[i]"
+                (click)="togglePlayPause(i)">
+                ▶
+            </button>
+
+          
+            <button
+                class="play-pause-btn"
+                *ngIf="isPlaying[i]"
+                (click)="togglePlayPause(i)">
+                ❚❚
+            </button> -->
 
         </ng-container>
+
+        <!-- <ng-container *ngFor="let banner of banners; let i = index">
+            <div class="video-wrapper">
+              <video
+                #videoRef
+                *ngIf="banner.type === 'video'"
+                [src]="baseUrl + banner.file_url"
+                class="slider-video"
+                controls
+                muted
+                autoplay
+                loop
+                playsinline
+                (loadedmetadata)="onMetadataLoaded(videoRefs.toArray()[i], i)">
+              </video>
+            </div>
+          </ng-container> -->
+
     </div>
     <button class="next">&#10095;</button>
 </section>

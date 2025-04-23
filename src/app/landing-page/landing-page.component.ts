@@ -126,8 +126,14 @@ export class LandingPageComponent implements OnInit {
 
   selectedImageData: any = null;
 
+  videoDurations: number[] = [];
+  videoTimes: number[] = [];
+  isPlaying: boolean[] = [];
+
+
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
+  @ViewChildren('videoRef') videoRefs!: QueryList<ElementRef<HTMLVideoElement>>;
 
   constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef) { }
 
@@ -172,17 +178,30 @@ export class LandingPageComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    this.videoElements.forEach((videoEl: ElementRef) => {
-      const video: HTMLVideoElement = videoEl.nativeElement;
-      video.muted = true; //  Force mute
-      video.autoplay = true; // Also re-enforce autoplay if needed
+    this.videoRefs.forEach(videoEl => {
+      const video = videoEl.nativeElement;
+      video.muted = true;
+      video.autoplay = true;
       video.loop = true;
-      video.load(); // Reload to apply new settings if necessary
-      video.play().catch(err => {
-        console.warn('Autoplay error:', err);
-      });
+      video.play().catch(err => console.warn('Autoplay error:', err));
     });
+
+      // Initialize playing state
+  this.isPlaying = this.banners.map(() => true);
   }
+  
+ togglePlayPause(index: number): void {
+  const video = this.videoRefs.toArray()[index].nativeElement;
+  if (video.paused) {
+    video.play();
+    this.isPlaying[index] = true;
+  } else {
+    video.pause();
+    this.isPlaying[index] = false;
+  }
+}
+
+  
 
 
   // Method to generate the next 6 months dynamically
@@ -623,43 +642,72 @@ export class LandingPageComponent implements OnInit {
 
 
 
+  // createBooking(bookingData: any): void {
+  //   this.bookingLoading = true;
+  //   // this.showDateTimePopup = false;
+  //   this.isLoaderOpen();
+
+  //   this.landingService.createBooking(bookingData).subscribe({
+  //     next: (res) => {
+  //       this.isLoaderClose() // Stop loader
+  //       this.bookingLoading = false;
+  //       if (res.status) {
+  //         this.bookingSuccess = 'Booking successful!';
+        
+  //         this.closePopup();
+  //         // this.openFinalPopup()
+  //         setTimeout(() => this.openFinalPopup(), 200);
+
+  //         this.resetAll();
+  //         // setTimeout(() => this.closeDateTimePopup(), 100);
+  //       } else {
+  //         this.bookingSuccessFlag = false;
+  //         this.showFinalStatusPopup = true; // Show popup on error
+  //         this.bookingError = 'Booking failed. Try again.';
+  //       }
+  //     },
+  //     error: (err) => {
+  //       this.bookingLoading = false;
+  //       this.bookingError = 'Something went wrong.';
+  //       console.error(err);
+  //     }
+  //   });
+  // }
+
+
   createBooking(bookingData: any): void {
     this.bookingLoading = true;
-    // this.showDateTimePopup = false;
-    this.isLoaderOpen();
-
-    this.landingService.createBooking(bookingData).subscribe({
-      next: (res) => {
-        this.isLoaderClose() // Stop loader
-        this.bookingLoading = false;
-        if (res.status) {
-          this.bookingSuccess = 'Booking successful!';
-          // this.showDateTimePopup = false;
-          // this.closeDateTimePopup()
-          // this.date = '';
-          // this.time = '';
-          // this.bookingSuccessFlag = true;
-          // // this.showFinalStatusPopup = true; 
-          // setTimeout(() =>  this.showFinalStatusPopup = true, 200);
-          this.closePopup();
-          // this.openFinalPopup()
-          setTimeout(() => this.openFinalPopup(), 200);
-
-          this.resetAll();
-          // setTimeout(() => this.closeDateTimePopup(), 100);
-        } else {
-          this.bookingSuccessFlag = false;
-          this.showFinalStatusPopup = true; // Show popup on error
-          this.bookingError = 'Booking failed. Try again.';
+    this.isLoaderOpen(); // Show loader
+  
+    // Show loader for 1 second, then hide and show success popup
+    setTimeout(() => {
+      this.isLoaderClose();   // Hide loader
+      this.bookingLoading = false;
+      this.openFinalPopup();  // Show success popup
+  
+      // Optimistically reset UI (user thinks booking is done)
+      this.resetAll();
+      this.closePopup();
+  
+      // API call happens in background
+      this.landingService.createBooking(bookingData).subscribe({
+        next: (res) => {
+          if (!res.status) {
+            this.bookingSuccessFlag = false;
+            this.bookingError = 'Booking failed. Try again.';
+            this.showFinalStatusPopup = true; // Optional: overwrite optimistic UI
+          }
+        },
+        error: (err) => {
+          console.error('Booking error:', err);
+          this.bookingError = 'Something went wrong.';
+          this.showFinalStatusPopup = true;
         }
-      },
-      error: (err) => {
-        this.bookingLoading = false;
-        this.bookingError = 'Something went wrong.';
-        console.error(err);
-      }
-    });
+      });
+  
+    }, 1000); // 1 second loader
   }
+  
 
 
   bookAppointment(): void {
@@ -1102,7 +1150,7 @@ export class LandingPageComponent implements OnInit {
   closeBlogPopup(): void {
     this.selectedImageData = null;
   }
-  
-  
+
+
 
 }
