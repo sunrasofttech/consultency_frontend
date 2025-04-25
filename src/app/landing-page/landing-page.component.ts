@@ -130,6 +130,12 @@ export class LandingPageComponent implements OnInit {
   videoTimes: number[] = [];
   isPlaying: boolean[] = [];
 
+  showLegalPopup = false;
+  legalPopupType: 'privacy' | 'terms' = 'privacy';
+
+  // State variable to control Pricing Popup visibility
+  showPricingPopup: boolean = false;
+
 
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
@@ -180,7 +186,7 @@ export class LandingPageComponent implements OnInit {
   ngAfterViewInit(): void {
     this.videoRefs.forEach(videoEl => {
       const video = videoEl.nativeElement;
-      video.muted = true;
+      video.muted = false;
       video.autoplay = true;
       video.loop = true;
       video.play().catch(err => console.warn('Autoplay error:', err));
@@ -201,6 +207,15 @@ export class LandingPageComponent implements OnInit {
     }
   }
 
+
+  openLegalPopup(type: 'privacy' | 'terms') {
+    this.legalPopupType = type;
+    this.showLegalPopup = true;
+  }
+  
+  closeLegalPopup() {
+    this.showLegalPopup = false;
+  }
 
 
   // Method to generate the next 6 months dynamically
@@ -848,6 +863,31 @@ export class LandingPageComponent implements OnInit {
         console.error('Error fetching landing page banners', err);
       }
     });
+  }
+
+
+  // Method to handle navbar link clicks
+  onNavLinkClick(event: Event, item: any): void {
+    event.preventDefault(); // Prevent default link behavior
+
+    if (item.name === 'Pricing') {
+      // Open the Pricing Popup when the "Pricing" option is clicked
+      this.openPricingPopup();
+    } else {
+      // Handle other navbar links (e.g., scrolling to sections)
+      this.scrollToSection(event, item.url);
+    }
+  }
+
+  // Method to open the Pricing Popup
+  openPricingPopup(): void {
+    this.showPricingPopup = true;
+    this.isSliderOpen = false;
+  }
+
+  // Method to close the Pricing Popup
+  closePricingPopup(): void {
+    this.showPricingPopup = false;
   }
 
 
