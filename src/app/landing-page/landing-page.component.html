@@ -38,11 +38,6 @@
         </div>
 
         <!-- Mobile Icon -->
-        <!-- <div class="home-icon" id="homeIcon">
-            <img src="../../assets/Group 8.png" alt="Home Icon" />
-        </div> -->
-
-        <!-- Mobile Icon -->
         <div class="home-icon" id="homeIcon" (click)="toggleSlider()">
             <img src="../../assets/Group 8.png" alt="Home Icon" />
         </div>
@@ -93,50 +88,15 @@
                 playsinline
                 preload="auto"
                 autoplay>
-            </video>
-
-           
-            <!-- <button
-                class="play-pause-btn"
-                *ngIf="!isPlaying[i]"
-                (click)="togglePlayPause(i)">
-                ▶
-            </button>
-
-          
-            <button
-                class="play-pause-btn"
-                *ngIf="isPlaying[i]"
-                (click)="togglePlayPause(i)">
-                ❚❚
-            </button> -->
-
+            </video>   
         </ng-container>
 
-        <!-- <ng-container *ngFor="let banner of banners; let i = index">
-            <div class="video-wrapper">
-              <video
-                #videoRef
-                *ngIf="banner.type === 'video'"
-                [src]="baseUrl + banner.file_url"
-                class="slider-video"
-                controls
-                muted
-                autoplay
-                loop
-                playsinline
-                (loadedmetadata)="onMetadataLoaded(videoRefs.toArray()[i], i)">
-              </video>
-            </div>
-          </ng-container> -->
+        
 
     </div>
     <button class="next">&#10095;</button>
 </section>
 
-<!-- <div class="ellipse">
-    <img src="../../assets/Ellipse_18.png" alt="Logo" class="ellipse" />
-</div> -->
 
 <!-- Features Section -->
 <section id="features">
@@ -158,64 +118,6 @@
     </div>
 </section>
 
-<!-- About Section -->
-<!-- <section id="about">
-    <div class="about-container">
-        <div class="about-text">
-            <h2>{{ aboutPageData.heading }}</h2>
-            <div style="color: #B5B5B5;"
-                [innerHTML]="aboutPageData.formattedDescription"></div>
-            <div class="experience-box">
-                <div class="experience-content">
-                    <span class="experience-count">{{
-                        aboutPageData.experience_count }}+</span>
-                    <span class="experience-label">{{
-                        aboutPageData.experience_label }}</span>
-                </div>
-
-                <div class="user-badges">
-                    <div class="badge">R</div>
-                    <div class="badge">T</div>
-                    <div class="badge">U</div>
-                </div>
-            </div>
-        </div>
-        <div class="about-image" *ngIf="aboutPageData.image_url">
-            <div class="red-bg"></div>
-            <img [src]="baseUrl + aboutPageData.image_url" alt="About Image" />
-        </div>
-    </div>
-</section> -->
-
-<!-- <section id="about">
-    <div class="about-container">
-        <div class="about-text">
-            <h2>{{ aboutPageData.heading }}</h2>
-            <div style="color: #B5B5B5;"
-                [innerHTML]="aboutPageData.formattedDescription"></div>
-        </div>
-
-        <div class="experience-box">
-            <div class="experience-content">
-                <span class="experience-count">{{ aboutPageData.experience_count
-                    }}+</span>
-                <span class="experience-label">{{ aboutPageData.experience_label
-                    }}</span>
-            </div>
-
-            <div class="user-badges">
-                <div class="badge">R</div>
-                <div class="badge">T</div>
-                <div class="badge">U</div>
-            </div>
-        </div>
-
-        <div class="about-image" *ngIf="aboutPageData.image_url">
-            <div class="red-bg"></div>
-            <img [src]="baseUrl + aboutPageData.image_url" alt="About Image" />
-        </div>
-    </div>
-</section> -->
 
 <section id="about">
     <div class="about-container">
@@ -241,9 +143,9 @@
                 </div>
 
                 <div class="user-badges">
-                    <div class="badge">R</div>
-                    <div class="badge">T</div>
-                    <div class="badge">U</div>
+                    <div class="badge1">R</div>
+                    <div class="badge2">T</div>
+                    <div class="badge3">U</div>
                 </div>
             </div>
         </div>
@@ -275,65 +177,7 @@
     </div>
 </section>
 
-<!-- Process Section -->
-<!-- <section id="process" class="process-section">
-    <h2 class="section-title">How It Works</h2>
 
-    <div class="timeline-grid">
-        
-        <div class="timeline-row">
-            <div *ngFor="let step of groupedProcessSteps[0]"
-                class="timeline-item">
-                <div class="step-content">
-                    <div class="step-icon-box">
-                        <img [src]="baseUrl + step.icon_url" alt="Icon"
-                            class="step-icon" />
-                    </div>
-                    <div class="step-text">
-                        <h3>{{ step.title }}</h3>
-                        <ul>
-                            <li *ngFor="let point of step.points">
-                                {{ point.point_text }}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        
-        <div class="timeline-numbers">
-            <ng-container *ngFor="let step of processSteps; let i = index">
-                <div class="step-number-box">
-                    <div class="circle-number">{{ i + 1 }}</div>
-                    <div *ngIf="i < processSteps.length - 1"
-                        class="step-line"></div>
-                </div>
-            </ng-container>
-        </div>
-
-        
-        <div class="timeline-row staggered">
-            <div *ngFor="let step of groupedProcessSteps[1]"
-                class="timeline-item">
-                <div class="step-content">
-                    <div class="step-icon-box">
-                        <img [src]="baseUrl + step.icon_url" alt="Icon"
-                            class="step-icon" />
-                    </div>
-                    <div class="step-text">
-                        <h3>{{ step.title }}</h3>
-                        <ul>
-                            <li *ngFor="let point of step.points">
-                                {{ point.point_text }}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section> -->
 
 <section id="process" class="process-section">
     <h2 class="section-title">How It Works</h2>
@@ -398,15 +242,6 @@
     </div>
 </section>
 
-<!-- Case Study Section -->
-<!-- <section id="casestudy">
-    <h2>{{ caseStudyTitle }}</h2>
-
-    <div class="case-study-images">
-        <img *ngFor="let image of caseStudyImages" [src]="image"
-            alt="Case Study Image" class="case-study-img" />
-    </div>
-</section> -->
 
 <section id="casestudy">
     <h2>{{ caseStudyTitle }}</h2>
@@ -565,8 +400,8 @@
 <div *ngIf="showFinalStatusPopup" class="overlay"
     (click)="closeFinalStatusPopup()">
     <div class="final-status-popup" (click)="$event.stopPropagation()">
-        <span class="close-icon"
-            (click)="closeFinalStatusPopup()">&#10006;</span>
+        <!-- <span class="close-icon"
+            (click)="closeFinalStatusPopup()">&#10006;</span> -->
         <h2>{{ bookingSuccessFlag ? 'Booking Successful!' : 'Booking Failed'
             }}</h2>
         <p>
@@ -581,23 +416,6 @@
     </div>
 </div>
 
-<!-- DATE & TIME POPUP -->
-<!-- <div *ngIf="showDateTimePopup" class="modal">
-    <div class="modal-content">
-        <h3>Select Date & Time</h3>
-
-        <input type="date" [(ngModel)]="date" />
-        <input type="time" [(ngModel)]="time" />
-
-        <div *ngIf="bookingError" class="error">{{ bookingError }}</div>
-        <div *ngIf="bookingSuccess" class="success">{{ bookingSuccess }}</div>
-
-        <button (click)="bookAppointment()" [disabled]="bookingLoading">
-            {{ bookingLoading ? 'Booking...' : 'Book' }}
-        </button>
-        <button (click)="closeDateTimePopup()">Cancel</button>
-    </div>
-</div> -->
 
 <!-- Tech Expert Page -->
 <section id="tech-expert">

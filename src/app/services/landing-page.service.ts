@@ -122,6 +122,11 @@ export class LandingPageService {
   getCaseStudyImageById(id: number): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/admin/getCaseStudyImageById/${id}`, {});
   }
+
+
+  interetedBooking(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/booking/interestedBooking`, data);
+  }
   
 
 }
