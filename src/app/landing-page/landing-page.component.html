@@ -1,6 +1,6 @@
 <!-- Navbar Container -->
 <div class="navbar-container">
-    <!-- Navbar -->
+
     <header class="navbar">
         <div class="logo-container">
             <img
@@ -19,18 +19,29 @@
                 <a
                     href="{{ item.url || '#' }}"
                     [ngClass]="{ 'pricing-btn': item.type === 'button' }"
-                    (click)="scrollToSection($event, item.url)">
+                    (click)="onNavLinkClick($event, item)">
                     {{ item.name }}
                 </a>
             </li>
         </ul>
+
+      
+<!-- Pricing Popup (Hidden by default) -->
+<div class="overlay pricing-popup-overlay" *ngIf="showPricingPopup" (click)="closePricingPopup()">
+    <div class="pricing-popup-container" (click)="$event.stopPropagation()">
+      <h2>Pricing Details</h2>
+      <p>Here is the pricing information...</p>
+      <button mat-button (click)="closePricingPopup()">Close</button>
+    </div>
+  </div>
+  
 
         <!-- Mobile Slider Menu -->
         <div class="mobile-slider" [class.open]="isSliderOpen">
             <ul>
                 <li *ngFor="let item of navbarOptions">
                     <a href="{{ item.url || '#' }}"
-                        (click)="scrollToSection($event, item.url)">
+                    (click)="onNavLinkClick($event, item)">
                         {{ item.name }}
                     </a>
                 </li>
@@ -88,15 +99,12 @@
                 playsinline
                 preload="auto"
                 autoplay>
-            </video>   
+            </video>
         </ng-container>
-
-        
 
     </div>
     <button class="next">&#10095;</button>
 </section>
-
 
 <!-- Features Section -->
 <section id="features">
@@ -117,7 +125,6 @@
         </div>
     </div>
 </section>
-
 
 <section id="about">
     <div class="about-container">
@@ -176,8 +183,6 @@
         </div>
     </div>
 </section>
-
-
 
 <section id="process" class="process-section">
     <h2 class="section-title">How It Works</h2>
@@ -241,7 +246,6 @@
 
     </div>
 </section>
-
 
 <section id="casestudy">
     <h2>{{ caseStudyTitle }}</h2>
@@ -416,7 +420,6 @@
     </div>
 </div>
 
-
 <!-- Tech Expert Page -->
 <section id="tech-expert">
     <div class="tech-container" *ngIf="techMainPage">
@@ -484,7 +487,7 @@
                 <a *ngFor="let icon of socialIcons" [href]="icon.link_url"
                     target="_blank">
                     <img [src]="baseUrl + icon.icon_url"
-                        alt="{{ icon.platform_name }}" width="32" height="32" />
+                        alt="{{ icon.platform_name }}" style="background-color: white; width: 32px; border-radius: 50%; padding: 3px; height: auto;" />
                 </a>
             </div>
         </div>
@@ -493,12 +496,38 @@
             <h4>{{ footerContent?.legal_title || 'Legal' }}</h4>
             <ul style="list-style: none; padding: 0;">
                 <li>
-                    <strong>Privacy and Policy</strong><br />
+                    <strong (click)="openLegalPopup('privacy')">Privacy and
+                        Policy</strong><br />
                 </li>
                 <li>
-                    <strong>Terms & Conditions</strong><br />
+                    <strong (click)="openLegalPopup('terms')">Terms &
+                        Conditions</strong><br />
                 </li>
             </ul>
+        </div>
+
+        <!-- Popup Modal -->
+        <div
+            *ngIf="showLegalPopup"
+            class="overlay legal-popup-overlay"
+            (click)="closeLegalPopup()">
+            <div
+                class="final-status-popup legal-popup"
+                (click)="$event.stopPropagation()">
+                <h2>
+                    {{ legalPopupType === 'privacy' ? 'Privacy and Policy' :
+                    'Terms & Conditions' }}
+                </h2>
+                <p>
+                    {{
+                    legalPopupType === 'privacy'
+                    ? footerContent?.privacy_policy_text
+                    : footerContent?.terms_conditions_text
+                    }}
+                </p>
+
+                <button class="ok-btn" (click)="closeLegalPopup()">Okay</button>
+            </div>
         </div>
 
         <div class="footer-contact">
