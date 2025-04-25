@@ -186,22 +186,21 @@ export class LandingPageComponent implements OnInit {
       video.play().catch(err => console.warn('Autoplay error:', err));
     });
 
-      // Initialize playing state
-  this.isPlaying = this.banners.map(() => true);
+    // Initialize playing state
+    this.isPlaying = this.banners.map(() => true);
   }
-  
- togglePlayPause(index: number): void {
-  const video = this.videoRefs.toArray()[index].nativeElement;
-  if (video.paused) {
-    video.play();
-    this.isPlaying[index] = true;
-  } else {
-    video.pause();
-    this.isPlaying[index] = false;
-  }
-}
 
-  
+  togglePlayPause(index: number): void {
+    const video = this.videoRefs.toArray()[index].nativeElement;
+    if (video.paused) {
+      video.play();
+      this.isPlaying[index] = true;
+    } else {
+      video.pause();
+      this.isPlaying[index] = false;
+    }
+  }
+
 
 
   // Method to generate the next 6 months dynamically
@@ -475,51 +474,6 @@ export class LandingPageComponent implements OnInit {
 
   }
 
-  // proceedToPayment(): void {
-  //   this.showConfirmPaymentPopup = false;
-
-  //   // Call SubPaisa payment integration here
-  //   this.startRazorpayPayment(this.pendingBookingData);
-  // }
-
-
-  // startRazorpayPayment(bookingData: any): void {
-  //   const options: any = {
-  //     key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
-  //     amount: bookingData.amount * 100, // in paise
-  //     currency: 'INR',
-  //     name: 'Sunra Softech Pvt Ltd',
-  //     description: 'Booking Payment',
-  //     handler: (response: any) => {
-  //       // On payment success
-  //       console.log('Payment Success:', response);
-  //       // You can store payment_id, signature etc. if needed
-  //       bookingData.paymentId = response.razorpay_payment_id;
-  //       this.createBooking(bookingData);
-  //     },
-  //     prefill: {
-  //       name: bookingData.name,
-  //       email: bookingData.email,
-  //       contact: bookingData.phone
-  //     },
-  //     notes: {
-  //       bookingTime: `${bookingData.date} ${bookingData.time}`
-  //     },
-  //     theme: {
-  //       color: '#3399cc'
-  //     }
-  //   };
-
-  //   const rzp = new Razorpay(options);
-  //   rzp.open();
-
-  //   rzp.on('payment.failed', (response: any) => {
-  //     console.error('Payment Failed:', response.error);
-  //     this.bookingError = 'Payment failed. Please try again.';
-  //   });
-  // }
-
-
 
   // Component code
 
@@ -579,6 +533,14 @@ export class LandingPageComponent implements OnInit {
       },
       theme: {
         color: '#3399cc'
+      },
+      modal: {
+        ondismiss: () => {
+          // User closed the payment popup without paying
+          console.log('Payment popup closed by user');
+          this.interestedBooking(bookingData); // Call the interested API
+          this.bookingLoading = false; // Reset loading spinner
+        }
       }
     };
 
@@ -588,6 +550,7 @@ export class LandingPageComponent implements OnInit {
     rzp.on('payment.failed', (response: any) => {
       console.error('Payment Failed:', response.error);
       this.bookingError = 'Payment failed. Please try again.';
+      this.interestedBooking(bookingData); // Log as interested
     });
 
     // Set a fallback timeout in case the user closes the Razorpay window with confirmation
@@ -653,7 +616,7 @@ export class LandingPageComponent implements OnInit {
   //       this.bookingLoading = false;
   //       if (res.status) {
   //         this.bookingSuccess = 'Booking successful!';
-        
+
   //         this.closePopup();
   //         // this.openFinalPopup()
   //         setTimeout(() => this.openFinalPopup(), 200);
@@ -678,17 +641,17 @@ export class LandingPageComponent implements OnInit {
   createBooking(bookingData: any): void {
     this.bookingLoading = true;
     this.isLoaderOpen(); // Show loader
-  
+
     // Show loader for 1 second, then hide and show success popup
     setTimeout(() => {
       this.isLoaderClose();   // Hide loader
       this.bookingLoading = false;
       this.openFinalPopup();  // Show success popup
-  
+
       // Optimistically reset UI (user thinks booking is done)
       this.resetAll();
       this.closePopup();
-  
+
       // API call happens in background
       this.landingService.createBooking(bookingData).subscribe({
         next: (res) => {
@@ -704,10 +667,29 @@ export class LandingPageComponent implements OnInit {
           this.showFinalStatusPopup = true;
         }
       });
-  
+
     }, 1000); // 1 second loader
   }
-  
+
+
+
+  interestedBooking(bookingData: any): void {
+    this.bookingLoading = true;
+    // Optimistically reset UI (user thinks booking is done)
+    this.resetAll();
+
+    // API call happens in background
+    this.landingService.interetedBooking(bookingData).subscribe({
+      next: (res) => {
+
+      },
+      error: (err) => {
+        console.error('Booking error:', err);
+        this.bookingError = 'Something went wrong.';
+      }
+    });
+
+  }
 
 
   bookAppointment(): void {
