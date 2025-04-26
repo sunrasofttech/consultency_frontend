@@ -129,4 +129,9 @@ export class LandingPageService {
   }
   
 
+  getPricingPopupContent(): Observable<any> { 
+    return this.http.post<any>(`${this.baseUrl}/admin/getPricePopupContant`, {});
+  }
+
+
 }
