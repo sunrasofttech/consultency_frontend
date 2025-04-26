@@ -164,7 +164,7 @@ export class LandingPageComponent implements OnInit {
     this.fetchFaqPage(); // add this
     this.fetchQuestionAndAnswer()
     this.fetchFooterContent(); // Call the method when the component initializes
-    this.generateUpcomingDays(14); // generate 2 weeks by default
+    this.generateUpcomingDays(30); // generate 4 weeks by default
     this.generateMonthOptions();
 
     this.fetchFooterSocialIcons();
@@ -1205,6 +1205,80 @@ export class LandingPageComponent implements OnInit {
       }
     });
   }
+
+
+
+
+
+   /** Helper to parse "Month YYYY" string */
+   parseMonthYear(monthString: string): { month: number, year: number } | null {
+    try {
+        const date = new Date(monthString + " 1"); // Add day 1 to make it parseable
+        if (isNaN(date.getTime())) { // Check if parsing failed
+            throw new Error("Invalid date string");
+        }
+        const month = date.getMonth() + 1; // getMonth is 0-11, need 1-12
+        const year = date.getFullYear();
+        return { month, year };
+    } catch (e) {
+        console.error("Error parsing month string:", monthString, e);
+        return null;
+    }
+}
+
+/** Loads days and slots for the currently selected month */
+loadDaysForSelectedMonth(): void {
+  this.days = []; // Clear previous days
+  this.selectedDay = null; // Reset selections
+  this.selectedTime = '';
+  this.availableTimes = [];
+  this.bookedTimes = [];
+  this.date = '';
+  this.time = '';
+
+  const parsedDate = this.parseMonthYear(this.selectedMonth);
+  if (!parsedDate) {
+      // this.showSnackbar("Invalid month selected.");
+      return;
+  }
+
+  // Optional: Add loading indicator specific to days loading
+  this.landingService.getAvailableSlotsForSpecificMonth(parsedDate.month, parsedDate.year)
+    .subscribe({
+      next: (response) => {
+        if (response.status && Array.isArray(response.days)) {
+          // Map the response to the DayOption interface
+          this.days = response.days.map((day: any) => ({
+            weekday: day.weekday,
+            day: day.date, // Day number
+            fullDate: day.fullDate, // YYYY-MM-DD
+            available: day.freeSlots > 0,
+            slotsText: day.freeSlots > 0 ? `${day.freeSlots} slot${day.freeSlots > 1 ? 's' : ''}` : '—',
+            slotsClass: day.freeSlots > 0 ? 'green' : 'gray' // Or 'available'/'full'
+          }));
+        } else {
+           this.days = []; // Ensure days is empty if API fails or returns no days
+           console.error('Failed to fetch available slots or invalid data:', response?.message);
+           // Optionally show snackbar
+        }
+        this.cdr.detectChanges(); // Update the view with new days
+      },
+      error: (error) => {
+        console.error('Error fetching available slots:', error);
+        // this.showSnackbar('Error loading slots for the selected month.');
+        this.days = []; // Clear days on error
+        this.cdr.detectChanges(); // Update view
+      }
+    });
+}
+
+/** Triggered when the month dropdown selection changes */
+onMonthChange(): void {
+    console.log("Month changed to:", this.selectedMonth);
+    this.loadDaysForSelectedMonth(); // Reload days for the new month
+}
+
+
 
 
 

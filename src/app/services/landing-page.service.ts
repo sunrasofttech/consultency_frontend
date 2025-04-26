@@ -134,4 +134,18 @@ export class LandingPageService {
   }
 
 
+
+  /**
+   * Fetches available days and slot counts for a specific month and year.
+   * @param month Month number (1-12)
+   * @param year Year (e.g., 2025)
+   */
+  getAvailableSlotsForSpecificMonth(month: number, year: number): Observable<any> {
+    const body = { month, year };
+    // Use the SAME endpoint, but now send month/year in the body
+    return this.http.post<any>(`${this.baseUrl}/booking/getAvailableSlotsForMonth`, body);
+  }
+
+
+
 }

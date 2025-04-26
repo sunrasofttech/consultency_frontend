@@ -393,11 +393,11 @@
 
 <!-- DATE & TIME POPUP -->
 <div *ngIf="showDateTimePopup" (click)="closePopup()" class="overlay">
-    <div class="popup" (click)="$event.stopPropagation()">
+    <div class="popup" style="max-width: 28%;" (click)="$event.stopPropagation()">
         <h2>Choose slot</h2>
 
         <div class="select-wrapper">
-            <select [(ngModel)]="selectedMonth">
+            <select [(ngModel)]="selectedMonth" (ngModelChange)="onMonthChange()">
                 <option *ngFor="let month of availableMonths" [ngValue]="month">
                     {{ month }}
                 </option>
