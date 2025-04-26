@@ -3294,3 +3294,326 @@ html {
         transform: skewX(-20deg) translateY(0); /* End at normal position */
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================== POPUP STYLES ================== */
+
+.pricing-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Dark semi-transparent overlay */
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    /* Align popup to the top, let content push down */
+    align-items: flex-start;
+    padding-top: 5vh; /* Add some space from the top */
+    padding-bottom: 5vh;
+    z-index: 1000;
+    padding-left: 20px; /* Horizontal padding */
+    padding-right: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.pricing-popup-content {
+    position: relative;
+    /* Dark background matching cards */
+    background-color:transparent; 
+    padding: 0px 0px;
+    border-radius: 10px; /* Keep rounded corners for the content area if desired */
+    max-width: 1100px;
+    width: 95%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    color: #d4d4d4;
+    /* Remove height limits if scrolling works better on overlay */
+    /* max-height: 90vh; */
+    /* overflow-y: auto; */ /* Let overlay handle scroll primarily */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- Close Button --- */
+.close-popup-btn {
+  position: absolute;
+  top: 15px; /* Adjust position */
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s ease;
+  z-index: 1001;
+}
+.close-popup-btn:hover { color: #fff; }
+
+/* --- Loading / Error States --- */
+.loading-indicator, .error-message, .no-plans-message {
+    padding: 40px 20px; text-align: center; color: #fff; width: 100%;
+}
+.error-message { color: #ff6b6b; font-weight: bold; }
+
+
+/* ================== PRICING CARD STYLES (REVISED) ================== */
+
+/* --- Pricing Heading inside Popup --- */
+.pricing-popup-content .price-heading {
+  margin-top: 27px; /* Reset top margin */
+  margin-bottom: 1rem; /* More space below heading */
+  font-size: 1.7rem; /* Make heading larger */
+  color: #c9aaff; /* Keep color */
+  text-align: center;
+  width: 100%;
+  font-weight: 600;
+}
+
+/* --- Container for Cards --- */
+.pricing-container {
+    display: flex;
+    flex-wrap: wrap; /* Keep wrap */
+    justify-content: center;
+    /* gap: 2rem; */ /* Previous value */
+    gap: 1.5rem; /* **** REDUCE GAP **** */
+    width: 100%;
+  }
+
+/* --- Base Card Style --- */
+.card {
+    background: transparent;
+    border: 1px solid rgba(165, 128, 255, 0.3);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    /* max-width: 320px; */ /* Previous value */
+    max-width: 300px; /* **** REDUCE MAX-WIDTH **** */
+    /* flex: 1 1 300px; */ /* Adjust basis if needed, but max-width is key */
+    flex: 1 1 280px;   /* **** Optional: Adjust flex-basis slightly **** */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: left;
+    color: #d4d4d4;
+  }
+
+
+.card:hover {
+  transform: translateY(-8px); /* Less hover movement */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Card Content Text Styles --- */
+.card h2 { font-size: 1.75rem; color: #c9aaff; margin-bottom: 0.5rem; font-weight: 600;}
+.card p { font-size: 0.95rem; color: #a580ff; margin-bottom: 1.5rem; line-height: 1.5;} /* More margin below subtitle */
+.card h3 { font-size: 3rem; font-weight: 700; color: #c9aaff; margin: 1rem 0 1.5rem 0; } /* Adjust margins */
+
+/* --- Currency Symbol --- */
+.currency-symbol {
+  font-size: 1.75rem; /* Adjust size relative to price */
+  vertical-align: baseline;
+  margin-right: 4px;
+  line-height: 1;
+  font-weight: normal;
+  color: #a580ff; /* Match subtitle color */
+}
+
+/* --- Card Button --- */
+.card button {
+  align-self: center;
+  background-color: #a580ff;
+  color: #0A0711; /* Dark text on button */
+  border: none;
+  padding: 0.8rem 2rem; /* Adjust padding */
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 0.5rem;
+  margin-top: 1.5rem; /* Margin above button */
+  margin-bottom: 0.5rem; /* Margin below button */
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.card button:hover { background-color: #c9aaff; }
+
+/* --- Features Section within Card --- */
+.features {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: auto; /* Push to bottom */
+  padding-top: 1.5rem; /* Space above features list */
+}
+.features ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Gap between li/hr */
+  list-style: none; padding: 0; margin: 0;
+}
+.features ul li {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Gap between icon and text */
+}
+.features ul li span {
+  font-weight: 400; /* Lighter font weight */
+  font-size: 0.9rem; /* Slightly smaller feature text */
+  color: #d4d4d4; /* Lighter text color */
+  line-height: 1.4;
+}
+
+/* --- Horizontal Rule (HR) --- */
+.features hr {
+  border: none;
+  /* Visible, thin line */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Slightly lighter than before */
+  width: 100%;
+  margin: 0; /* Remove margin, rely on UL gap */
+}
+
+/* --- Highlighted Card Style --- */
+.card.highlight-card {
+  background: #0A0711;
+  border-color: #a580ff;
+  /* Optional: Remove the default scale if it interferes, */
+  /* although it's usually fine. Keep if you like the effect. */
+  /* transform: scale(1.03); */
+  z-index: 10;
+}
+/* Apply hover scale instead? */
+.card.highlight-card:hover {
+    transform: scale(1.03) translateY(-8px);
+    box-shadow: 0 10px 20px rgba(165, 128, 255, 0.2);
+}
+
+
+/* ================== MEDIA QUERIES ================== */
+/* Adjust media query breakpoints if needed based on new sizes */
+@media (max-width: 992px) { /* Maybe adjust this breakpoint down slightly if needed */
+    /* Recalculate needed width for 2 cards: (2 * 300px) + 1.5rem = ~624px */
+    .card {
+        max-width: 280px; /* Can keep smaller size here */
+        flex-basis: calc(50% - 1.5rem); /* Ensure gap is accounted for */
+     }
+     .card.highlight-card {
+        flex-basis: calc(50% - 1.5rem);
+     }
+}
+
+/* Mobile styles should still be fine */
+@media (max-width: 767px) {
+    .pricing-popup-content { padding: 20px; margin-right: 60px}
+    .pricing-container { flex-direction: column; align-items: center; gap: 1.5rem; }
+    .card, .card.highlight-card {
+        max-width: 90%; width: 100%; flex-basis: auto;
+        transform: none !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card:hover { transform: none; }
+    .pricing-popup-content .price-heading { font-size: 1.8rem; margin-bottom: 1.5rem; }
+}
+
+/* ================== END OF CSS ================== */
+
+.blog-popup .popup-content .formatted-paragraph {
+    white-space: pre-wrap; /* Preserve whitespace and line breaks, allow wrapping */
+    word-wrap: break-word; /* Ensure long words break if needed */
+    font-family: inherit;  /* Optional: Ensure it uses the component's font */
+    line-height: 1.6;      /* Optional: Adjust line height for readability */
+    color: inherit;        /* Optional: Ensure it uses the component's text color */
+    /* Add any other specific styling you need for this paragraph */
+  }
+
+  .blog-popup .popup-content {
+    /* ... other popup styles ... */
+    text-align: left; /* Usually desired for multi-line text */
+}
+
+.close-btn {
+    display: block; /* Make it block to center easily or position */
+    margin: 20px auto 0 auto; /* Center button */
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  /* --- 1. Modify the Base Card Style --- */
+.card {
+    /* --- Add/Modify these properties --- */
+    display: flex;           /* Ensure card is a flex container */
+    flex-direction: column;  /* Stack children vertically */
+    height: 420px;           /* **** SET A FIXED HEIGHT **** (Adjust value as needed) */
+    /* Or use max-height: 580px; */
+
+    /* --- Keep your existing properties --- */
+    background: transparent; /* Or #181323 or rgba(255, 255, 255, 0.05) etc. */
+    border: 1px solid rgba(165, 128, 255, 0.3);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    max-width: 300px;
+    flex: 1 1 280px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: left;
+    color: #d4d4d4;
+}
+
+/* --- 2. Modify the Features Section Style --- */
+.features {
+    /* --- Add/Modify these properties --- */
+    flex-grow: 1;         /* Allow this section to take up remaining vertical space */
+    overflow-y: auto;     /* Add vertical scrollbar ONLY IF content overflows */
+    min-height: 0;        /* Needed for flex-grow and overflow to work reliably */
+    padding-bottom: 0.5rem; /* Optional: Space at the bottom of scrollable area */
+    /* --- Remove this property if present --- */
+    /* margin-top: auto; */
+
+    /* --- Keep your existing properties --- */
+    display: flex; /* Keep if needed, but flex-direction is below */
+    flex-direction: column; /* Keep */
+    width: 100%;
+    padding-top: 1.5rem; /* Keep space above features list */
+}
+
+
+/* --- 3. Optional: Add Custom Scrollbar Styles --- */
+/* (Add this block if you want styled scrollbars in Webkit browsers) */
+.features::-webkit-scrollbar {
+    width: 6px;
+}
+.features::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+.features::-webkit-scrollbar-thumb {
+    background-color: rgba(165, 128, 255, 0.5);
+    border-radius: 3px;
+}
+.features::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(165, 128, 255, 0.8);
+}

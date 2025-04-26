@@ -136,6 +136,9 @@ export class LandingPageComponent implements OnInit {
   // State variable to control Pricing Popup visibility
   showPricingPopup: boolean = false;
 
+  pricingPlans: any[] = [];      // <--- Changed type to any[]
+  pricingLoading: boolean = false;
+  pricingError: string | null = null;
 
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
@@ -882,6 +885,7 @@ export class LandingPageComponent implements OnInit {
   // Method to open the Pricing Popup
   openPricingPopup(): void {
     this.showPricingPopup = true;
+    this.fetchPricingData();
     this.isSliderOpen = false;
   }
 
@@ -1172,6 +1176,36 @@ export class LandingPageComponent implements OnInit {
   closeBlogPopup(): void {
     this.selectedImageData = null;
   }
+
+
+  fetchPricingData(): void {
+    this.pricingLoading = true;
+    this.pricingError = null;
+    this.landingService.getPricingPopupContent().subscribe({
+      next: (response: any) => { // Explicitly receive 'any'
+        // **Basic Validation is important when using 'any'**
+        if (response && response.status === true && Array.isArray(response.data)) {
+          this.pricingPlans = response.data; // Assign the data array
+          // console.log('Pricing Plans (any):', this.pricingPlans); // Debugging
+        } else {
+          // Handle cases where the response structure is not as expected
+          console.error('Invalid API response structure for pricing:', response);
+          this.pricingError = 'Could not load pricing information due to invalid format.';
+          this.pricingPlans = []; // Reset to empty array
+        }
+        this.pricingLoading = false;
+        this.cdr.detectChanges(); // Trigger change detection if needed
+      },
+      error: (err) => {
+        console.error('Error fetching pricing data:', err);
+        this.pricingError = 'Failed to load pricing. Please try again later.';
+        this.pricingLoading = false;
+        this.pricingPlans = []; // Reset to empty array
+        this.cdr.detectChanges(); // Trigger change detection if needed
+      }
+    });
+  }
+
 
 
 
