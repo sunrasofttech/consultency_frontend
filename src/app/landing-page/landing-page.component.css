@@ -1466,6 +1466,7 @@ html {
 
     .popup-image {
         max-height: 250px;
+        margin-top: 17px;
     }
 
     .close-btn {
@@ -2140,7 +2141,43 @@ html {
     max-width: 80%;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     font-family: 'Segoe UI', sans-serif;
+    position: relative;
+    z-index: 1001;
 }
+
+/* --- Close Button Style (ensure it targets the button inside .popup) --- */
+.popup .close-popup-btn {
+    position: absolute;   /* Positions relative to the nearest positioned ancestor (now .popup) */
+    top: 0px;            /* Distance from the top edge of .popup */
+    right: 15px;           /* Distance from the right edge of .popup */
+    background: rgb(90, 2, 161);      /* Your inline style - or move it here */
+    color: white;         /* Color for the 'X' */
+    border: none;
+    font-size: 1.5rem;    /* Adjust size */
+    font-weight: bold;
+    line-height: 1;       /* Important for vertical alignment of 'X' */
+    padding: 0 5px;       /* Add slight horizontal padding */
+    width: 28px;          /* Fixed width */
+    height: 28px;         /* Fixed height */
+    border-radius: 50%;   /* Make it circular */
+    cursor: pointer;
+    display: flex;        /* For centering the 'X' inside */
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;        /* Ensure button is above other popup content */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Optional shadow */
+  }
+  
+  .popup .close-popup-btn:hover {
+    background-color: rgb(41, 3, 63); /* Darker red on hover */
+  }
+  
+  /* Optional: Adjust h2 margin if needed to avoid overlap */
+  .popup h2 {
+      margin-top: 0; /* Remove default top margin */
+      margin-bottom: 1.5rem; /* Space below heading */
+       /* padding-right: 30px; /* Optional: Ensure text doesn't go under button */
+  }
 
 .popup h2 {
     font-size: 14px;
@@ -3535,6 +3572,39 @@ html {
     .pricing-popup-content .price-heading { font-size: 1.8rem; margin-bottom: 1.5rem; }
 }
 
+
+
+
+/* --- Close Button Style for Pricing Popup --- */
+.pricing-popup-content .close-popup-btn { /* Target button inside this specific content */
+    position: absolute;
+    top: 15px; /* Adjust distance from top */
+    right: 15px; /* Adjust distance from right */
+    background: rgba(50, 50, 50, 0.6); /* Semi-transparent dark background */
+    color: #e0e0e0; /* Light gray 'X' */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+    width: 32px; /* Size */
+    height: 32px;
+    border-radius: 50%; /* Circular */
+    font-size: 1.4rem; /* Size of 'X' */
+    font-weight: bold;
+    line-height: 1; /* Align 'X' vertically */
+    padding: 0;
+    cursor: pointer;
+    display: flex; /* Center 'X' */
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    z-index: 1001; /* Above other content */
+  }
+  
+  .pricing-popup-content .close-popup-btn:hover {
+    background-color: rgba(255, 0, 0, 0.7); /* Reddish background on hover */
+    color: white; /* White 'X' on hover */
+    transform: scale(1.1); /* Slight scale effect */
+  }
+
+
 /* ================== END OF CSS ================== */
 
 .blog-popup .popup-content .formatted-paragraph {
@@ -3617,3 +3687,100 @@ html {
 .features::-webkit-scrollbar-thumb:hover {
     background-color: rgba(165, 128, 255, 0.8);
 }
+
+
+
+.popup {
+    max-width: 28%;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .popup {
+        max-width: 80%;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    .popup {
+        max-width: 80%;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 360px) {
+    .popup {
+        max-width: 80%;
+    }
+    .close-price-popup-btn{
+        top: 40px; /* Adjust position */
+        right: -35px;
+
+    }
+}
+
+
+
+
+.close-price-popup-btn {
+    position: absolute;
+    top: 15px; /* Adjust position */
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.2s ease;
+    z-index: 1001;
+  }
+  .close-price-popup-btn:hover { color: #fff; }
+
+
+  /* Mobile responsive */
+@media (max-width: 768px) {
+   
+    .close-price-popup-btn{
+        top: 33px; /* Adjust position */
+        right: -35px;
+
+    }
+}
+
+
+/* Style for the 'X' close button in the Blog Popup */
+.blog-popup .close-popup-x-btn {
+    position: absolute;
+    top: -6px;          /* Adjust distance from top */
+    right: -8px;         /* Adjust distance from right */
+    width: 32px;          /* Button size (adjust if needed) */
+    height: 32px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle light border */
+    /* ---- START: Color Changes ---- */
+    background-color: rgba(40, 40, 40, 0.7);  /* Dark semi-transparent background */
+    color: #f0f0f0;                          /* Light gray/white 'X' */
+    /* ---- END: Color Changes ---- */
+    border-radius: 50%;   /* Circular */
+    font-size: 1.5rem;    /* Size of the 'X' */
+    font-weight: bold;
+    line-height: 1;       /* Align 'X' vertically */
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease; /* Added transform */
+    z-index: 10;
+  }
+  
+  /* Corrected Hover State */
+  .blog-popup .close-popup-x-btn:hover {
+    background-color: rgba(0, 0, 0, 0.9); /* Darker background on hover */
+    color: #fff;                         /* Brighter 'X' on hover */
+    transform: scale(1.1);              /* Slight scale effect on hover */
+  }

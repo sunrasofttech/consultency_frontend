@@ -44,7 +44,7 @@
                 <!-- Click inside content stops closing -->
 
                 <!-- Explicit Close Button -->
-                <!-- <button class="close-popup-btn" (click)="closePricingPopup()">×</button> -->
+                <button class="close-price-popup-btn" (click)="closePricingPopup()">×</button>
 
                 <!-- Heading -->
                 <h1 class="price-heading"
@@ -341,6 +341,9 @@
 <!-- Blog Popup -->
 <div class="blog-popup" *ngIf="selectedImageData" (click)="closeBlogPopup()">
     <div class="popup-content" (click)="$event.stopPropagation()">
+
+        <button class="close-popup-x-btn" (click)="closeBlogPopup()" aria-label="Close popup">×</button>
+
         <img [src]="baseUrl + selectedImageData.image_url" alt="Popup Image"
             class="popup-image" />
         <h2>{{ selectedImageData.title }}</h2>
@@ -393,7 +396,8 @@
 
 <!-- DATE & TIME POPUP -->
 <div *ngIf="showDateTimePopup" (click)="closePopup()" class="overlay">
-    <div class="popup" style="max-width: 28%;" (click)="$event.stopPropagation()">
+    <div class="popup"  (click)="$event.stopPropagation()">
+        <button class="close-popup-btn" (click)="closePopup()">×</button>
         <h2>Choose slot</h2>
 
         <div class="select-wrapper">
