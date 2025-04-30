@@ -267,7 +267,7 @@ body {
 
 
 /* Slider Section */
-.slider {
+/* .slider {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -295,7 +295,178 @@ body {
     max-width: 800px;
     height: 450px;
     border-radius: 10px;
+} */
+
+
+
+
+/* --- Base Styles (Desktop First) --- */
+
+/* Slider Section - Outer Container */
+.slider {
+    position: relative !important; /* REQUIRED for positioning children */
+    width: 100% !important;
+    max-width: 850px !important; /* Max width on desktop */
+    margin: 35px auto 0 auto !important;
+    overflow: hidden !important; /* REQUIRED */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important; /* Good practice */
+    padding: 20px !important;
+    background-color: transparent;
 }
+
+/* Decorative Element */
+.slider::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 80% !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    width: 200px !important;
+    height: 200px !important;
+    /* background: #57017673 !important; */
+    border-radius: 50% !important;
+    filter: blur(100px) !important;
+    opacity: 0.8 !important; /* Max effective opacity is 1 */
+    pointer-events: none !important;
+    z-index: 1 !important;
+    transition: opacity 0.3s ease !important; /* For smooth hide on mobile */
+}
+
+/* Slider Container (Video Area) */
+.slider-container {
+    position: relative !important; /* REQUIRED */
+    width: 100% !important;
+    max-width: 800px !important;  /* Desktop video width */
+    height: 450px !important;     /* Desktop fixed height */
+    overflow: hidden !important;    /* REQUIRED */
+    border-radius: 10px !important;
+    background-color: #000 !important;
+    flex-shrink: 0 !important;
+     /* Transition for height change */
+    transition: height 0.3s ease, padding-top 0.3s ease !important;
+}
+
+/* Individual Video Styling */
+.slider-video {
+    position: absolute !important; /* REQUIRED */
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    opacity: 0 !important; /* REQUIRED for slider visibility */
+    visibility: hidden !important; /* REQUIRED for slider visibility */
+    transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out !important; /* Fade effect */
+    z-index: 0 !important;
+}
+
+/* Active Video Styling */
+.slider-video.active {
+    opacity: 1 !important;         /* REQUIRED makes active slide visible */
+    visibility: visible !important; /* REQUIRED makes active slide visible */
+    z-index: 0 !important;         /* Ensures active is on top */
+}
+
+/* Button Styling */
+.slider .prev,
+.slider .next {
+    cursor: pointer !important;
+    position: absolute !important; /* REQUIRED */
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    padding: 16px !important; /* Desktop padding */
+    color: rgb(80, 79, 79) !important;
+    font-weight: bold !important;
+    font-size: 20px !important; /* Desktop font size */
+    /* background-color: rgba(0, 0, 0, 0.4) !important; */
+    background-color: transparent !important;
+
+    border: none !important;
+    user-select: none !important;
+    z-index: 3 !important; /* Above videos and ::after */
+    transition: background-color 0.3s ease, font-size 0.3s ease, padding 0.3s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.slider .prev:hover,
+.slider .next:hover {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.slider .prev {
+    left: 12px !important; /* Desktop position */
+    border-radius: 0 3px 3px 0 !important;
+}
+
+.slider .next {
+    right: 5px !important; /* Desktop position */
+    border-radius: 3px 0 0 3px !important;
+}
+
+.slider button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+
+/* --- [ IMPORTANT ] Responsive Styles for Mobile (screens <= 768px) --- */
+@media (max-width: 768px) {
+
+    /* [ MOBILE SLIDER ] Adjust overall container */
+    .slider {
+        max-width: 100% !important; /* Use full available width */
+        padding: 0 15px !important;  /* Add small side padding */
+        margin-top: 50px !important; /* Adjust top margin */
+    }
+
+    /* [ MOBILE DECORATION ] Hide decorative element */
+    .slider::after {
+       opacity: 0 !important;        /* Hide smoothly */
+       visibility: hidden !important; /* Ensure hidden */
+    }
+
+    /* [ MOBILE VIDEO AREA ] Use aspect ratio instead of fixed height */
+    .slider-container {
+        max-width: 100% !important;    /* Fill padded parent */
+        height: auto !important;       /* CRUCIAL: Remove fixed height */
+        padding-top: 56.25% !important;/* CRUCIAL: Aspect Ratio (16:9). Change if needed (height/width*100) */
+        border-radius: 8px !important; /* Slightly smaller radius */
+    }
+
+    /* [ MOBILE BUTTONS ] Make smaller */
+    .slider .prev,
+    .slider .next {
+        font-size: 16px !important;     /* Smaller text/icon */
+        padding: 10px 8px !important;   /* Smaller padding */
+    }
+
+    /* [ MOBILE BUTTONS POSITION ] Adjust relative to parent padding */
+     .slider .prev {
+        left: 8px !important; /* Match parent padding */
+    }
+
+    .slider .next {
+        right: 0px !important; /* Match parent padding */
+    }
+}
+
+/* --- [ OPTIONAL ] Further adjustments for very small screens (<= 480px) --- */
+@media (max-width: 480px) {
+     /* [ SMALL MOBILE BUTTONS ] Even smaller */
+     .slider .prev,
+     .slider .next {
+        font-size: 14px !important;
+        padding: 8px 6px !important;
+     }
+     /* You can add more specific overrides here if needed */
+}
+
+
+
+
 
 
 /* Mask Group */
@@ -2130,7 +2301,7 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 99999;
 }
 
 .popup {
@@ -2412,10 +2583,10 @@ html {
 
 
 
-.slider {
+/* .slider {
     display: flex;
     align-items: center;
-    /* Vertically center buttons with video */
+ 
     justify-content: center;
     gap: 0px;
     width: 100%;
@@ -2466,7 +2637,7 @@ html {
     flex: 1;
     display: flex;
     justify-content: center;
-    /* Horizontally center the video */
+    
     align-items: center;
     overflow: hidden;
     max-width: 100%;
@@ -2476,10 +2647,10 @@ html {
 .slider-video {
     width: 100%;
     height: auto;
-    /* ✅ Keep aspect ratio */
+   
     max-height: 500px;
     object-fit: contain;
-    /* ✅ Don't crop video */
+   
     border-radius: 8px;
 }
 
@@ -2488,14 +2659,14 @@ html {
 @media (max-width: 768px) {
     .slider-video {
         max-height: 200px;
-        /* smaller height for phones */
+       
         width: 600px
     }
 
     .slider-container {
         width: 100%;
     }
-}
+} */
 
 
 .time-slot {
@@ -3127,7 +3298,7 @@ html {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    z-index: 1;
+    /* z-index: 1; */
     clip-path: polygon(0 0, 76% 0, 100% 100%, 0% 100%);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -3637,7 +3808,7 @@ html {
     /* --- Add/Modify these properties --- */
     display: flex;           /* Ensure card is a flex container */
     flex-direction: column;  /* Stack children vertically */
-    height: 420px;           /* **** SET A FIXED HEIGHT **** (Adjust value as needed) */
+    height: 450px;           /* **** SET A FIXED HEIGHT **** (Adjust value as needed) */
     /* Or use max-height: 580px; */
 
     /* --- Keep your existing properties --- */
@@ -3699,12 +3870,19 @@ html {
     .popup {
         max-width: 80%;
     }
+    .card{
+        height: 540px;
+    }
 }
 
 /* Mobile responsive */
 @media (max-width: 480px) {
     .popup {
         max-width: 80%;
+    }
+
+    .card{
+        height: 540px;
     }
 }
 
@@ -3716,6 +3894,10 @@ html {
     .close-price-popup-btn{
         top: 40px; /* Adjust position */
         right: -35px;
+
+    }
+    .card{
+        height: 540px;
 
     }
 }
@@ -3783,4 +3965,213 @@ html {
     background-color: rgba(0, 0, 0, 0.9); /* Darker background on hover */
     color: #fff;                         /* Brighter 'X' on hover */
     transform: scale(1.1);              /* Slight scale effect on hover */
+  }
+
+
+
+  .signup-form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 2, 20, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Vertically center the content box */
+    z-index: 10000;
+    padding: 20px; /* Padding around the content box, crucial for small screens */
+    box-sizing: border-box;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  
+  .signup-form-content {
+    background: linear-gradient(145deg, #1a0a2e, #0f041a);
+    padding: 18px 18px; /* Adjusted padding */
+    border-radius: 12px;
+    color: #e0d6f5;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(90, 45, 133, 0.4);
+    width: 100%; /* Use available width defined by overlay padding */
+    box-sizing: border-box;
+  
+    /* --- Responsiveness Adjustments --- */
+    max-width: 550px; /* Increased max-width for larger screens */
+    max-height: calc(100vh - 60px); /* Max height relative to viewport (leaving 30px top/bottom margin) */
+    overflow-y: auto; /* Add vertical scroll ONLY if content exceeds max-height */
+    /* --- End Adjustments --- */
+  }
+  
+  /* Style the scrollbar (Optional, Webkit browsers like Chrome/Safari/Edge) */
+  .signup-form-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  .signup-form-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+  .signup-form-content::-webkit-scrollbar-thumb {
+    background-color: #5a2d85;
+    border-radius: 10px;
+    border: 2px solid transparent; /* Creates padding around thumb */
+    background-clip: content-box;
+  }
+  .signup-form-content::-webkit-scrollbar-thumb:hover {
+    background-color: #7c3dbb;
+  }
+  
+  
+  .signup-form-content h2 {
+    margin-top: 0;
+    margin-bottom: 0px; /* Slightly reduced margin */
+    color: #ffffff;
+    text-align: center;
+    font-size: 1.5em; /* Adjusted size */
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .form-group {
+    margin-bottom: 0px; /* Slightly reduced margin */
+    position: relative;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: 500;
+    color: #c5b3e6;
+    margin-bottom: 5px; /* Slightly reduced margin */
+    font-size: 0.9em;
+  }
+  
+  /* Input and Textarea common styles */
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px 12px; /* Adjusted padding */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #5a2d85;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit; /* Ensure consistent font */
+  }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #8a7a9f;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #a580ff;
+    box-shadow: 0 0 0 3px rgba(165, 128, 255, 0.2);
+  }
+  
+  /* Textarea specific */
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px; /* Keep a reasonable min height */
+    line-height: 1.4; /* Improve readability */
+  }
+  
+  
+  /* Container for buttons */
+  .form-actions {
+    margin-top: 0px; /* Adjusted margin */
+    display: flex;
+    flex-direction: column;
+    gap: 0px; /* Adjusted gap */
+  }
+  
+  /* General button styles */
+  .form-actions .btn {
+    padding: 10px 15px; /* Adjusted padding */
+    font-weight: 600;
+    font-size: 1em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Primary button (Submit) */
+  .form-actions .btn-primary {
+    background-color: #a580ff;
+    color: #11051f;
+  }
+  .form-actions .btn-primary:hover {
+    background-color: #b89eff;
+    transform: translateY(-2px);
+  }
+  
+  /* Secondary button (Cancel) */
+  .form-actions .btn-secondary {
+    background-color: transparent;
+    color: #c5b3e6;
+    border: 1px solid #5a2d85;
+  }
+  .form-actions .btn-secondary:hover {
+    background-color: rgba(90, 45, 133, 0.2);
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
+  
+  
+  .close-signup-btn {
+    position: absolute;
+    top: 4px; /* Adjusted position */
+    right: 12px; /* Adjusted position */
+    font-size: 1.7em; /* Adjusted size */
+    line-height: 1;
+    color: #a799c1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.3s ease, transform 0.2s ease;
+  }
+  .close-signup-btn:hover {
+    color: #ffffff;
+    transform: scale(1.1);
+  }
+  
+  /* Media Query for smaller screens adjustments - focus on reducing padding/margins */
+  @media (max-width: 600px) { /* Target slightly larger threshold */
+    .signup-form-content {
+      padding: 25px 20px; /* Reduce padding further */
+      max-height: calc(100vh - 40px); /* Allow slightly more height relative to viewport */
+    }
+    .signup-form-content h2 {
+      font-size: 1.4em;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-actions {
+      margin-top: 20px;
+      gap: 10px;
+    }
+    .form-actions .btn {
+      padding: 10px 12px;
+      font-size: 0.95em;
+    }
+  }
+  
+  @media (max-width: 400px) { /* Very small screens */
+      .signup-form-overlay {
+        padding: 10px; /* Even less padding */
+      }
+      .signup-form-content {
+         padding: 20px 15px;
+         max-height: calc(100vh - 20px); /* Use almost full height */
+      }
+       .signup-form-content h2 {
+         font-size: 1.3em;
+       }
   }

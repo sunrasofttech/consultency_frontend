@@ -33,7 +33,7 @@ export class LandingPageService {
   getAboutPage(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getAboutPage`, {});
   }
-  
+
   getClientPageContent(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getClientPageContent`, {});
   }
@@ -41,12 +41,12 @@ export class LandingPageService {
   getClientLogos(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getClientLogos`, {});
   }
-  
+
 
   getAllProcessSteps(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getAllProcessSteps`, {});
   }
-  
+
   getCaseStudies(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getCaseStudies`, {});
   }
@@ -54,8 +54,8 @@ export class LandingPageService {
   getCaseStudyImages(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getCaseStudyImages`, {});
   }
-  
-  
+
+
   getContactPage(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getContactPage`, {});
   }
@@ -63,15 +63,15 @@ export class LandingPageService {
   getTechMainPage(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getTechMainPage`, {});
   }
-  
+
   getAllTech(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getTech`, {});
   }
-  
+
   getFaqPage(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getFaqPage`, {});
   }
-  
+
   getFaqQnsAns(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getFaqQnsAns`, {});
   }
@@ -87,7 +87,7 @@ export class LandingPageService {
   getAvailableSlotsForMonth() {
     return this.http.post<any>(`${this.baseUrl}/booking/getAvailableSlotsForMonth`, {});
   }
-  
+
   getSubscriptionAmount(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getSubscriptionAmount`, {});
   }
@@ -104,14 +104,14 @@ export class LandingPageService {
       })
     );
   }
-  
+
 
   verifyRazorpayPayment(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment/verifyRazorpayPayment`, payload);
   }
 
-   // New method to get footer content
-   getFooterContent(): Observable<any> {
+  // New method to get footer content
+  getFooterContent(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getFooterContent`, {});
   }
 
@@ -127,9 +127,9 @@ export class LandingPageService {
   interetedBooking(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/booking/interestedBooking`, data);
   }
-  
 
-  getPricingPopupContent(): Observable<any> { 
+
+  getPricingPopupContent(): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/admin/getPricePopupContant`, {});
   }
 
@@ -146,6 +146,21 @@ export class LandingPageService {
     return this.http.post<any>(`${this.baseUrl}/booking/getAvailableSlotsForMonth`, body);
   }
 
+  createUserPurchase(data: any): Observable<any> {
+    const url = `${this.baseUrl}/userPurchase/createUserPurchase`;
+    return this.http.post(url, data).pipe(
+      catchError((error) => {
+        console.error('Error creating user purchase:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Method to update user purchase status
+  updateUserPurchaseStatus(purchaseId: any, data: any): Observable<any> {
+    const url = `${this.baseUrl}/userPurchase/updateUserPurchaseStatus/${purchaseId}`;
+    return this.http.post<any>(url, data);
+  }
 
 
 }
