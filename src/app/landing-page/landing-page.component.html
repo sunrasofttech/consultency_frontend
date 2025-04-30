@@ -25,15 +25,6 @@
             </li>
         </ul>
 
-        <!-- Pricing Popup (Hidden by default) -->
-        <!-- <div class="overlay pricing-popup-overlay" *ngIf="showPricingPopup" (click)="closePricingPopup()">
-    <div class="pricing-popup-container" (click)="$event.stopPropagation()">
-      <h2>Pricing Details</h2>
-      <p>Here is the pricing information...</p>
-      <button mat-button (click)="closePricingPopup()">Close</button>
-    </div>
-  </div> -->
-
         <!-- ================== PRICING POPUP ================== -->
         <div
             class="pricing-popup-overlay"
@@ -44,7 +35,8 @@
                 <!-- Click inside content stops closing -->
 
                 <!-- Explicit Close Button -->
-                <button class="close-price-popup-btn" (click)="closePricingPopup()">×</button>
+                <button class="close-price-popup-btn"
+                    (click)="closePricingPopup()">×</button>
 
                 <!-- Heading -->
                 <h1 class="price-heading"
@@ -74,7 +66,11 @@
                         <p>{{ plan.subtitle }}</p>
                         <h3><span class="currency-symbol">₹</span>{{ plan.price
                             | number:'1.0-0' }}</h3>
-                        <button>{{ plan.button_text }}</button>
+                        <!-- <button>{{ plan.button_text }}</button> -->
+                        <button
+                            (click)="selectPlanAndOpenSignup(plan); $event.stopPropagation()">
+                            {{ plan.button_text }}
+                        </button>
 
                         <div class="features">
                             <ul>
@@ -113,6 +109,120 @@
             </div>
         </div>
         <!-- ================== END OF PRICING POPUP ================== -->
+
+        <!-- ================== SIGNUP FORM ================== -->
+        <!-- Removed overlay click handler IF you ONLY want explicit close -->
+        <div class="signup-form-overlay" *ngIf="showSignupForm">
+            <!-- Stop propagation prevents clicks inside from closing the overlay -->
+            <div class="signup-form-content" (click)="$event.stopPropagation()">
+                <!-- Close button -->
+                <button class="close-signup-btn" (click)="closeSignupForm()"
+                    aria-label="Close Signup Form">
+                    × <!-- Use HTML entity for 'x' -->
+                </button>
+
+                <h2>Fill Your Details</h2> <!-- Changed heading slightly -->
+
+                <form (ngSubmit)="onSignupFormSubmit()" novalidate>
+                    <!-- Kept original ngSubmit -->
+                    <div class="form-group">
+                        <label for="signupName">Name</label>
+                        <!-- Changed id slightly for uniqueness -->
+                        <input type="text" id="signupName"
+                            placeholder="Enter your full name"
+                            [(ngModel)]="signupData.name" name="name"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <!-- Changed id slightly -->
+                        <input type="email" id="signupEmail"
+                            placeholder="you@example.com"
+                            [(ngModel)]="signupData.email" name="email"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupPhone">Phone</label>
+                        <!-- Changed id slightly -->
+                        <input type="tel" id="signupPhone"
+                            placeholder="Your phone number (e.g., 9123456780)"
+                            [(ngModel)]="signupData.phone" name="phone"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupProjectName">Project Name</label>
+                        <!-- Changed id slightly -->
+                        <input type="text" id="signupProjectName"
+                            placeholder="Brief name for your project"
+                            [(ngModel)]="signupData.project_name"
+                            name="project_name"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupProjectDescription">Project
+                            Description</label> <!-- Changed id slightly -->
+                        <textarea id="signupProjectDescription"
+                            placeholder="Describe your project needs"
+                            [(ngModel)]="signupData.project_description"
+                            name="project_description"
+                            rows="4" required></textarea>
+                    </div>
+
+                    <!-- Button container -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Submit
+                            Details</button> <!-- Updated button text -->
+                        <button type="button" class="btn btn-secondary"
+                            (click)="closeSignupForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- ================== END OF SIGNUP FORM ================== -->
+
+        <!-- ================== Price Popup Payment Confirmation Popup  ================== -->
+        <div *ngIf="showConfirmPricePaymentPopup" class="overlay"
+            (click)="closePriceConfirmPopup()">
+            <div class="confirm-popup" (click)="$event.stopPropagation()">
+                <h2>Confirm Subscription</h2>
+                <p>
+                    Proceed to pay ₹{{ packageAmount }} for
+                    <strong>{{ selectedPlanTitle }}</strong> plan?
+                </p>
+
+                <button class="confirm-btn"
+                    (click)="proceedToSignupPurchasePayment()">Proceed
+                    to
+                    Pay</button>
+                <button class="cancel-btn"
+                    (click)="closePriceConfirmPopup()">Cancel</button>
+            </div>
+        </div>
+
+        <!--  ==================Price Popup Payment Confirmation Popup ================== -->
+
+        <!-- Plan Purchase Status Popup -->
+        <div *ngIf="showPurchaseStatusPopup" class="overlay"
+            (click)="closePurchaseStatusPopup()">
+            <div class="final-status-popup" (click)="$event.stopPropagation()">
+                <h2>{{ purchaseSuccessFlag ? 'Purchase Successful!' :
+                    'Purchase Failed' }}</h2>
+                <p>
+                    {{ purchaseSuccessFlag
+                    ?
+                    '🎉 Your plan has been successfully purchased! Check your email for details and next steps.'
+                    :
+                    '⚠️ Payment failed. Please try again or contact support if the issue persists.'
+                    }}
+                </p>
+                <button class="ok-btn"
+                    (click)="closePurchaseStatusPopup()">Okay</button>
+            </div>
+        </div>
 
         <!-- Mobile Slider Menu -->
         <div class="mobile-slider" [class.open]="isSliderOpen">
@@ -163,7 +273,7 @@
     </div>
 </section>
 
-<section class="slider" *ngIf="!showPricingPopup">
+<!-- <section class="slider" *ngIf="!showPricingPopup">
     <button class="prev">&#10094;</button>
     <div class="slider-container">
         <ng-container *ngFor="let banner of banners let i = index">
@@ -182,6 +292,37 @@
 
     </div>
     <button class="next">&#10095;</button>
+</section> -->
+
+<section class="slider" *ngIf="!showPricingPopup && banners.length > 0">
+    <!-- Add check for banners.length -->
+    <!-- Previous Button -->
+    <button class="prev" (click)="prevSlide()"
+        [disabled]="banners.length < 2">❮</button>
+
+    <div class="slider-container">
+        <!-- Loop through banners -->
+        <ng-container *ngFor="let banner of banners; let i = index">
+            <video
+                #videoRef
+                *ngIf="banner.type === 'video'"
+                [src]="baseUrl + banner.file_url"
+                class="slider-video"
+                [class.active]="i === currentIndex"
+                controls
+                loop
+                playsinline
+                muted
+                preload="auto">
+                Your browser does not support the video tag.
+            </video>
+            <!-- You could add an img tag here with *ngIf="banner.type === 'image'" later -->
+        </ng-container>
+    </div>
+
+    <!-- Next Button -->
+    <button class="next" (click)="nextSlide()"
+        [disabled]="banners.length < 2">❯</button>
 </section>
 
 <!-- Features Section -->
@@ -342,7 +483,8 @@
 <div class="blog-popup" *ngIf="selectedImageData" (click)="closeBlogPopup()">
     <div class="popup-content" (click)="$event.stopPropagation()">
 
-        <button class="close-popup-x-btn" (click)="closeBlogPopup()" aria-label="Close popup">×</button>
+        <button class="close-popup-x-btn" (click)="closeBlogPopup()"
+            aria-label="Close popup">×</button>
 
         <img [src]="baseUrl + selectedImageData.image_url" alt="Popup Image"
             class="popup-image" />
@@ -396,12 +538,13 @@
 
 <!-- DATE & TIME POPUP -->
 <div *ngIf="showDateTimePopup" (click)="closePopup()" class="overlay">
-    <div class="popup"  (click)="$event.stopPropagation()">
+    <div class="popup" (click)="$event.stopPropagation()">
         <button class="close-popup-btn" (click)="closePopup()">×</button>
         <h2>Choose slot</h2>
 
         <div class="select-wrapper">
-            <select [(ngModel)]="selectedMonth" (ngModelChange)="onMonthChange()">
+            <select [(ngModel)]="selectedMonth"
+                (ngModelChange)="onMonthChange()">
                 <option *ngFor="let month of availableMonths" [ngValue]="month">
                     {{ month }}
                 </option>

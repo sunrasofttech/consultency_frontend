@@ -65,7 +65,7 @@ export class LandingPageComponent implements OnInit {
 
   caseStudyImages: any[] = []; // or ideally use an interface (see below)
 
-
+  currentIndex = 0; // Index of the currently active banner
   contactHeading: string = '';
   contactSubheading: string = '';
   contactButtonText: string = '';
@@ -139,6 +139,27 @@ export class LandingPageComponent implements OnInit {
   pricingPlans: any[] = [];      // <--- Changed type to any[]
   pricingLoading: boolean = false;
   pricingError: string | null = null;
+
+
+  showSignupForm: boolean = false;
+  signupData = {
+    name: '',
+    email: '',
+    phone: '',
+    project_name: '',
+    project_description: ''
+  };
+
+  selectedPlan: any = null; // To store the chosen plan (optional)
+  showConfirmPricePaymentPopup: boolean = false;
+  selectedPlanTitle: string = '';
+  packageAmount: number = 0;
+
+  showPurchaseStatusPopup: boolean = false;
+  purchaseSuccessFlag: boolean = false; // set true or false based on payment result
+
+  createdPurchaseId: string | null = null;
+  createdPurchaseData: any = null;
 
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
@@ -215,7 +236,7 @@ export class LandingPageComponent implements OnInit {
     this.legalPopupType = type;
     this.showLegalPopup = true;
   }
-  
+
   closeLegalPopup() {
     this.showLegalPopup = false;
   }
@@ -489,6 +510,11 @@ export class LandingPageComponent implements OnInit {
   closeConfirmPopup(): void {
     this.showConfirmPaymentPopup = false;
     this.bookingLoading = false;
+
+  }
+
+  closePriceConfirmPopup(): void {
+    this.showConfirmPricePaymentPopup = false;
 
   }
 
@@ -869,6 +895,77 @@ export class LandingPageComponent implements OnInit {
   }
 
 
+
+  /**
+   * Navigates to the next slide.
+   */
+  nextSlide(): void {
+    if (!this.banners || this.banners.length === 0) return;
+    this.pauseCurrentVideo();
+    const nextIndex = (this.currentIndex + 1) % this.banners.length; // Wrap around
+    this.currentIndex = nextIndex;
+    // Use setTimeout to allow Angular's change detection to update the [class.active]
+    // before we try to play the new video.
+    setTimeout(() => this.playCurrentVideo(), 50); // Small delay
+  }
+
+  /**
+   * Navigates to the previous slide.
+   */
+  prevSlide(): void {
+    if (!this.banners || this.banners.length === 0) return;
+    this.pauseCurrentVideo();
+    const prevIndex = (this.currentIndex - 1 + this.banners.length) % this.banners.length; // Wrap around correctly for negative
+    this.currentIndex = prevIndex;
+    setTimeout(() => this.playCurrentVideo(), 50); // Small delay
+  }
+
+  /**
+   * Pauses the currently active video.
+   */
+  pauseCurrentVideo(): void {
+    const currentVideoElement = this.getVideoElementByIndex(this.currentIndex);
+    if (currentVideoElement && !currentVideoElement.paused) {
+      try {
+        currentVideoElement.pause();
+        currentVideoElement.currentTime = 0; // Optional: Reset video to start
+        console.log(`Paused video at index ${this.currentIndex}`);
+      } catch (error) {
+        console.warn("Could not pause video: ", error);
+      }
+    }
+  }
+
+  /**
+   * Plays the currently active video.
+   */
+  playCurrentVideo(): void {
+    const currentVideoElement = this.getVideoElementByIndex(this.currentIndex);
+    if (currentVideoElement) {
+      // Mute before playing programmatically if needed, as browsers often block unmuted autoplay
+      currentVideoElement.muted = true; // Or ensure controls allow unmuting
+      currentVideoElement.play().then(() => {
+        console.log(`Playing video at index ${this.currentIndex}`);
+      }).catch(error => {
+        console.warn(`Autoplay prevented for video index ${this.currentIndex}: `, error);
+        // You might want to show a play button overlay here if autoplay fails
+      });
+    } else {
+      console.log("Video element not found for index:", this.currentIndex);
+    }
+  }
+
+  /**
+   * Helper to get the native video element from the QueryList by index.
+   */
+  private getVideoElementByIndex(index: number): HTMLVideoElement | null {
+    const videoElementRef = this.videoRefs?.toArray()[index];
+    return videoElementRef?.nativeElement ?? null;
+  }
+
+
+
+
   // Method to handle navbar link clicks
   onNavLinkClick(event: Event, item: any): void {
     event.preventDefault(); // Prevent default link behavior
@@ -1210,73 +1307,267 @@ export class LandingPageComponent implements OnInit {
 
 
 
-   /** Helper to parse "Month YYYY" string */
-   parseMonthYear(monthString: string): { month: number, year: number } | null {
+  /** Helper to parse "Month YYYY" string */
+  parseMonthYear(monthString: string): { month: number, year: number } | null {
     try {
-        const date = new Date(monthString + " 1"); // Add day 1 to make it parseable
-        if (isNaN(date.getTime())) { // Check if parsing failed
-            throw new Error("Invalid date string");
-        }
-        const month = date.getMonth() + 1; // getMonth is 0-11, need 1-12
-        const year = date.getFullYear();
-        return { month, year };
+      const date = new Date(monthString + " 1"); // Add day 1 to make it parseable
+      if (isNaN(date.getTime())) { // Check if parsing failed
+        throw new Error("Invalid date string");
+      }
+      const month = date.getMonth() + 1; // getMonth is 0-11, need 1-12
+      const year = date.getFullYear();
+      return { month, year };
     } catch (e) {
-        console.error("Error parsing month string:", monthString, e);
-        return null;
+      console.error("Error parsing month string:", monthString, e);
+      return null;
     }
-}
-
-/** Loads days and slots for the currently selected month */
-loadDaysForSelectedMonth(): void {
-  this.days = []; // Clear previous days
-  this.selectedDay = null; // Reset selections
-  this.selectedTime = '';
-  this.availableTimes = [];
-  this.bookedTimes = [];
-  this.date = '';
-  this.time = '';
-
-  const parsedDate = this.parseMonthYear(this.selectedMonth);
-  if (!parsedDate) {
-      // this.showSnackbar("Invalid month selected.");
-      return;
   }
 
-  // Optional: Add loading indicator specific to days loading
-  this.landingService.getAvailableSlotsForSpecificMonth(parsedDate.month, parsedDate.year)
-    .subscribe({
-      next: (response) => {
-        if (response.status && Array.isArray(response.days)) {
-          // Map the response to the DayOption interface
-          this.days = response.days.map((day: any) => ({
-            weekday: day.weekday,
-            day: day.date, // Day number
-            fullDate: day.fullDate, // YYYY-MM-DD
-            available: day.freeSlots > 0,
-            slotsText: day.freeSlots > 0 ? `${day.freeSlots} slot${day.freeSlots > 1 ? 's' : ''}` : '—',
-            slotsClass: day.freeSlots > 0 ? 'green' : 'gray' // Or 'available'/'full'
-          }));
-        } else {
-           this.days = []; // Ensure days is empty if API fails or returns no days
-           console.error('Failed to fetch available slots or invalid data:', response?.message);
-           // Optionally show snackbar
-        }
-        this.cdr.detectChanges(); // Update the view with new days
-      },
-      error: (error) => {
-        console.error('Error fetching available slots:', error);
-        // this.showSnackbar('Error loading slots for the selected month.');
-        this.days = []; // Clear days on error
-        this.cdr.detectChanges(); // Update view
-      }
-    });
-}
+  /** Loads days and slots for the currently selected month */
+  loadDaysForSelectedMonth(): void {
+    this.days = []; // Clear previous days
+    this.selectedDay = null; // Reset selections
+    this.selectedTime = '';
+    this.availableTimes = [];
+    this.bookedTimes = [];
+    this.date = '';
+    this.time = '';
 
-/** Triggered when the month dropdown selection changes */
-onMonthChange(): void {
+    const parsedDate = this.parseMonthYear(this.selectedMonth);
+    if (!parsedDate) {
+      // this.showSnackbar("Invalid month selected.");
+      return;
+    }
+
+    // Optional: Add loading indicator specific to days loading
+    this.landingService.getAvailableSlotsForSpecificMonth(parsedDate.month, parsedDate.year)
+      .subscribe({
+        next: (response) => {
+          if (response.status && Array.isArray(response.days)) {
+            // Map the response to the DayOption interface
+            this.days = response.days.map((day: any) => ({
+              weekday: day.weekday,
+              day: day.date, // Day number
+              fullDate: day.fullDate, // YYYY-MM-DD
+              available: day.freeSlots > 0,
+              slotsText: day.freeSlots > 0 ? `${day.freeSlots} slot${day.freeSlots > 1 ? 's' : ''}` : '—',
+              slotsClass: day.freeSlots > 0 ? 'green' : 'gray' // Or 'available'/'full'
+            }));
+          } else {
+            this.days = []; // Ensure days is empty if API fails or returns no days
+            console.error('Failed to fetch available slots or invalid data:', response?.message);
+            // Optionally show snackbar
+          }
+          this.cdr.detectChanges(); // Update the view with new days
+        },
+        error: (error) => {
+          console.error('Error fetching available slots:', error);
+          // this.showSnackbar('Error loading slots for the selected month.');
+          this.days = []; // Clear days on error
+          this.cdr.detectChanges(); // Update view
+        }
+      });
+  }
+
+  /** Triggered when the month dropdown selection changes */
+  onMonthChange(): void {
     console.log("Month changed to:", this.selectedMonth);
     this.loadDaysForSelectedMonth(); // Reload days for the new month
-}
+  }
+
+
+  selectPlanAndOpenSignup(plan: any): void {
+    this.selectedPlan = plan; // Store the selected plan details
+    console.log('Selected Plan:', this.selectedPlan);
+
+    this.packageAmount = plan.price; // Store amount for confirmation popup
+    this.selectedPlanTitle = plan.title; // Store plan title
+    this.showSignupForm = true; // Show the signup form
+    this.showSignupForm = true; // Show the signup form
+
+    // Optional: Decide if you want to close the pricing popup when signup opens
+    // this.showPricingPopup = false;
+  }
+
+  closeSignupForm(): void {
+    this.showSignupForm = false; // Hide the signup form
+    this.selectedPlan = null; // Clear selected plan when closing signup (optional)
+    // Reset signup form fields if needed
+    // this.signupData = { name: '', email: '', password: '' };
+  }
+
+  // submitSignupForm(): void {
+  //   if (!this.selectedPlan) {
+  //     console.error('No plan selected');
+  //     return;
+  //   }
+
+  //   this.showConfirmPricePaymentPopup = true
+
+  //   const requestBody = {
+  //     name: this.signupData.name,
+  //     email: this.signupData.email,
+  //     phone: this.signupData.phone,
+  //     pricing_popup_id: this.selectedPlan.id,
+  //     price: this.selectedPlan.price,
+  //     project_name: this.signupData.project_name,
+  //     project_description: this.signupData.project_description
+  //   };
+
+  //   this.landingService.createUserPurchase(requestBody).subscribe({
+  //     next: (response) => {
+  //       console.log('Purchase created successfully:', response);
+  //       // this.closeSignupForm();
+  //       // Optionally show a toast/snackbar message
+  //     },
+  //     error: (error) => {
+  //       console.error('Failed to create purchase:', error);
+  //       // Optionally show error to the user
+  //     }
+  //   });
+  // }
+
+
+
+  onSignupFormSubmit(): void {
+    if (!this.selectedPlan) {
+      console.error('No plan selected');
+      return;
+    }
+
+    if (!this.signupData.name || !this.signupData.email || !this.signupData.phone || !this.signupData.project_name || !this.signupData.project_description) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    this.packageAmount = this.selectedPlan.price;
+    this.selectedPlanTitle = this.selectedPlan.title;
+    this.showConfirmPricePaymentPopup = true;
+
+    const purchaseData = {
+      name: this.signupData.name,
+      email: this.signupData.email,
+      phone: this.signupData.phone,
+      pricing_popup_id: this.selectedPlan.id,
+      price: this.selectedPlan.price,
+      project_name: this.signupData.project_name,
+      project_description: this.signupData.project_description
+    };
+
+    // Create User Purchase (mark as interested, pending payment)
+    this.landingService.createUserPurchase(purchaseData).subscribe({
+      next: (response) => {
+        console.log('User created:', response);
+        this.createdPurchaseId = response.data.id;
+        this.createdPurchaseData = purchaseData;
+
+        // 2. Then show popup
+        this.packageAmount = this.selectedPlan.price;
+        this.selectedPlanTitle = this.selectedPlan.title;
+        // this.showConfirmPricePaymentPopup = true;
+        setTimeout(() => {
+          this.showConfirmPricePaymentPopup = true;
+        }, 2000); // 2000 milliseconds = 3 seconds
+
+      },
+
+    });
+  }
+
+  proceedToSignupPurchasePayment(): void {
+
+    if (!this.createdPurchaseId || !this.createdPurchaseData) {
+      this.showErrorSnackbar('No purchase data found. Please submit the form again.');
+      return;
+    }
+
+    // 2. Create Razorpay Order
+    this.landingService.createRazorpayOrder(this.createdPurchaseData.price).subscribe({
+      next: (res) => {
+        if (res.status && res.order) {
+          this.startRazorpaySignupPayment(res.order, this.createdPurchaseId, this.createdPurchaseData);
+        } else {
+          this.showErrorSnackbar('Failed to create Razorpay order.');
+        }
+      },
+      error: () => {
+        this.showErrorSnackbar('Error creating Razorpay order.');
+      }
+    });
+  }
+
+
+  startRazorpaySignupPayment(order: any, purchaseId: any, data: any): void {
+    const options = {
+      key: 'rzp_live_0cClDW4rSilf2w', // Use your live Razorpay key
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Sunra Softech Pvt Ltd',
+      description: 'Plan Purchase',
+      order_id: order.id,
+      handler: (response: any) => {
+        this.verifySignupPurchasePayment(response, purchaseId, data);
+      },
+      prefill: {
+        name: data.name,
+        email: data.email,
+        contact: data.phone
+      },
+      notes: {
+        planId: data.pricing_popup_id
+      },
+      theme: { color: '#3399cc' }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  }
+
+  verifySignupPurchasePayment(response: any, purchaseId: any, data: any): void {
+    const payload = {
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
+    };
+
+    this.landingService.verifyRazorpayPayment(payload).subscribe({
+      next: (res) => {
+        if (res.status) {
+          // Add payment details to the purchase and update status to "paid"
+          data.payment_id = response.razorpay_payment_id;
+          this.updateUserPurchaseStatus(purchaseId, { payment_status: 'paid', payment_id: data.payment_id });
+          this.purchaseSuccessFlag = true;
+          this.showPurchaseStatusPopup = true;
+        } else {
+          this.showErrorSnackbar('Payment verification failed.');
+          this.purchaseSuccessFlag = false;
+          this.showPurchaseStatusPopup = true;
+        }
+      },
+      error: () => {
+        this.showErrorSnackbar('Payment verification failed.');
+      }
+    });
+  }
+
+  updateUserPurchaseStatus(purchaseId: any, data: any): void {
+    this.landingService.updateUserPurchaseStatus(purchaseId, data).subscribe({
+      next: (response) => {
+        console.log('Purchase status updated successfully:', response);
+      },
+      error: (error) => {
+        console.error('Failed to update purchase status:', error);
+        this.showErrorSnackbar('Could not update purchase status.');
+      }
+    });
+  }
+
+  closePurchaseStatusPopup() {
+    this.showPurchaseStatusPopup = false;
+  }
+
+
+
 
 
 
