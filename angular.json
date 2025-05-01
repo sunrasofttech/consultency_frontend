@@ -20,7 +20,12 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "google8a236fb40257ecaf.html",
+                "input": "src",
+                "output": "/"
+              }
             ],
             "styles": [
               "src/custom-theme.scss",
@@ -88,7 +93,12 @@
             "karmaConfig": "karma.conf.js",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "google8a236fb40257ecaf.html",
+                "input": "src",
+                "output": "/"
+              }
             ],
             "styles": [
               "src/styles.css"
