@@ -306,7 +306,7 @@ export class LandingPageComponent implements OnInit {
   selectTime(time: string): void {
     this.selectedTime = time;
     this.time = time; // Store the selected time in the 'time' variable
-    console.log('Selected time:', this.time); // Check if time is set properly
+    // console.log('Selected time:', this.time); 
   }
 
   // loadAvailableTimesForDate(date: string): void {
@@ -412,11 +412,11 @@ export class LandingPageComponent implements OnInit {
             return day;
           });
         } else {
-          console.error('Failed to fetch booked slots');
+          // console.error('Failed to fetch booked slots');
         }
       },
       error: (err) => {
-        console.error('Error fetching booked slots:', err);
+        // console.error('Error fetching booked slots:', err);
       }
     });
   }
@@ -450,7 +450,7 @@ export class LandingPageComponent implements OnInit {
   // }
 
   closePopup() {
-    console.log("time popup")
+    // console.log("time popup")
     this.showDateTimePopup = false;
     this.cdr.detectChanges()
   }
@@ -493,7 +493,7 @@ export class LandingPageComponent implements OnInit {
         }
       },
       (error) => {
-        console.error('Error fetching available slots:', error);
+        // console.error('Error fetching available slots:', error);
       }
     );
 
@@ -562,7 +562,7 @@ export class LandingPageComponent implements OnInit {
       order_id: order.id,
       handler: (response: any) => {
         // On payment success
-        console.log('Payment Success:', response);
+        // console.log('Payment Success:', response);
 
         // Send payment details to backend for verification
         this.verifyPayment(response, bookingData);
@@ -581,7 +581,7 @@ export class LandingPageComponent implements OnInit {
       modal: {
         ondismiss: () => {
           // User closed the payment popup without paying
-          console.log('Payment popup closed by user');
+          // console.log('Payment popup closed by user');
           this.interestedBooking(bookingData); // Call the interested API
           this.bookingLoading = false; // Reset loading spinner
         }
@@ -592,7 +592,7 @@ export class LandingPageComponent implements OnInit {
     rzp.open();
 
     rzp.on('payment.failed', (response: any) => {
-      console.error('Payment Failed:', response.error);
+      // console.error('Payment Failed:', response.error);
       this.bookingError = 'Payment failed. Please try again.';
       this.interestedBooking(bookingData); // Log as interested
     });
@@ -600,7 +600,7 @@ export class LandingPageComponent implements OnInit {
     // Set a fallback timeout in case the user closes the Razorpay window with confirmation
     setTimeout(() => {
       if (this.bookingLoading) {
-        console.log('Razorpay screen was likely closed or payment not completed');
+        // console.log('Razorpay screen was likely closed or payment not completed');
         this.bookingLoading = false; // Reset loading state after a delay
       }
     }, 5000); // Wait 5 seconds before resetting the loading state
@@ -631,7 +631,7 @@ export class LandingPageComponent implements OnInit {
 
   openFinalPopup(): void {
 
-    console.log("Call final popup")
+    // console.log("Call final popup")
     this.bookingSuccessFlag = true;
     this.showFinalStatusPopup = true;
     this.cdr.detectChanges()
@@ -706,7 +706,7 @@ export class LandingPageComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.error('Booking error:', err);
+          // console.error('Booking error:', err);
           this.bookingError = 'Something went wrong.';
           this.showFinalStatusPopup = true;
         }
@@ -728,7 +728,7 @@ export class LandingPageComponent implements OnInit {
 
       },
       error: (err) => {
-        console.error('Booking error:', err);
+        // console.error('Booking error:', err);
         this.bookingError = 'Something went wrong.';
       }
     });
@@ -738,8 +738,8 @@ export class LandingPageComponent implements OnInit {
 
   bookAppointment(): void {
 
-    console.log("this.date", this.date)
-    console.log("this.date", this.time)
+    // console.log("this.date", this.date)
+    // console.log("this.date", this.time)
 
     if (!this.date || !this.time) {
       alert("Please select date and time.")
@@ -768,12 +768,12 @@ export class LandingPageComponent implements OnInit {
 
     this.landingService.getSubscriptionAmount().subscribe({
       next: (res) => {
-        console.log("Subscription Amount:", res);
+        // console.log("Subscription Amount:", res);
         this.amount = res.data[0].amount;
         this.pendingBookingData.amount = this.amount;
       },
       error: (err) => {
-        console.error("Error fetching subscription amount", err);
+        // console.error("Error fetching subscription amount", err);
       }
     });
 
@@ -829,7 +829,7 @@ export class LandingPageComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Failed to load navbar options', err);
+        // console.error('Failed to load navbar options', err);
       }
     });
   }
@@ -860,12 +860,12 @@ export class LandingPageComponent implements OnInit {
             : null;
 
           // Log the URLs
-          console.log('icon_1_url:', this.icon_1_url);
-          console.log('icon_2_url:', this.icon_2_url);
+          // console.log('icon_1_url:', this.icon_1_url);
+          // console.log('icon_2_url:', this.icon_2_url);
         }
       },
       error: (err) => {
-        console.error('Error fetching landing page info', err);
+        // console.error('Error fetching landing page info', err);
       }
     });
   }
@@ -885,11 +885,11 @@ export class LandingPageComponent implements OnInit {
       next: (res) => {
         if (res.status && res.data?.length > 0) {
           this.banners = res.data; // Store the banners data
-          console.log('Landing page banners:', this.banners);
+          // console.log('Landing page banners:', this.banners);
         }
       },
       error: (err) => {
-        console.error('Error fetching landing page banners', err);
+        // console.error('Error fetching landing page banners', err);
       }
     });
   }
@@ -929,9 +929,9 @@ export class LandingPageComponent implements OnInit {
       try {
         currentVideoElement.pause();
         currentVideoElement.currentTime = 0; // Optional: Reset video to start
-        console.log(`Paused video at index ${this.currentIndex}`);
+        // console.log(`Paused video at index ${this.currentIndex}`);
       } catch (error) {
-        console.warn("Could not pause video: ", error);
+        // console.warn("Could not pause video: ", error);
       }
     }
   }
@@ -945,13 +945,13 @@ export class LandingPageComponent implements OnInit {
       // Mute before playing programmatically if needed, as browsers often block unmuted autoplay
       currentVideoElement.muted = true; // Or ensure controls allow unmuting
       currentVideoElement.play().then(() => {
-        console.log(`Playing video at index ${this.currentIndex}`);
+        // console.log(`Playing video at index ${this.currentIndex}`);
       }).catch(error => {
-        console.warn(`Autoplay prevented for video index ${this.currentIndex}: `, error);
+        // console.warn(`Autoplay prevented for video index ${this.currentIndex}: `, error);
         // You might want to show a play button overlay here if autoplay fails
       });
     } else {
-      console.log("Video element not found for index:", this.currentIndex);
+      // console.log("Video element not found for index:", this.currentIndex);
     }
   }
 
@@ -995,13 +995,13 @@ export class LandingPageComponent implements OnInit {
   scrollToSection(event: Event, sectionId: string | null): void {
     if (sectionId?.startsWith('#')) {
       event.preventDefault();
-      console.log('Scrolling to:', sectionId);
+      // console.log('Scrolling to:', sectionId);
       const element = document.querySelector(sectionId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } else {
-      console.log('Invalid or missing section ID:', sectionId);
+      // console.log('Invalid or missing section ID:', sectionId);
     }
     this.isSliderOpen = false;
   }
@@ -1011,11 +1011,11 @@ export class LandingPageComponent implements OnInit {
       next: (res) => {
         if (res.status && res.data?.length > 0) {
           this.features = res.data;
-          console.log('Feature Data:', this.features);
+          // console.log('Feature Data:', this.features);
         }
       },
       error: (err) => {
-        console.error('Error fetching feature page data', err);
+        // console.error('Error fetching feature page data', err);
       }
     });
   }
@@ -1029,11 +1029,11 @@ export class LandingPageComponent implements OnInit {
           // Split the description into four lines for display
           const description = this.aboutPageData.description || '';
           this.aboutPageData.formattedDescription = this.splitDescriptionIntoLines(description);
-          console.log('About Page Data:', this.aboutPageData);
+          // console.log('About Page Data:', this.aboutPageData);
         }
       },
       error: (err) => {
-        console.error('Error fetching About page data', err);
+        // console.error('Error fetching About page data', err);
       }
     });
   }
@@ -1059,11 +1059,11 @@ export class LandingPageComponent implements OnInit {
         if (res.status && res.data) {
           this.clientHeading = res.data.heading;
           this.clientSubheading = res.data.subheading;
-          console.log('Client Page Data:', res.data);
+          // console.log('Client Page Data:', res.data);
         }
       },
       error: (err) => {
-        console.error('Error fetching client page content', err);
+        // console.error('Error fetching client page content', err);
       }
     });
   }
@@ -1073,11 +1073,11 @@ export class LandingPageComponent implements OnInit {
       next: (res) => {
         if (res.status && res.data?.length > 0) {
           this.clientLogos = res.data.map((logo: any) => `${this.baseUrl}${logo.logo_url}`);
-          console.log('Client logos:', this.clientLogos);
+          // console.log('Client logos:', this.clientLogos);
         }
       },
       error: (err) => {
-        console.error('Error fetching client logos:', err);
+        // console.error('Error fetching client logos:', err);
       }
     });
   }
@@ -1105,11 +1105,11 @@ export class LandingPageComponent implements OnInit {
           this.processSteps = res.data;
 
           this.groupedProcessSteps = this.chunkArray(this.processSteps, 2);
-          console.log('Grouped Process Steps:', this.groupedProcessSteps);
+          // console.log('Grouped Process Steps:', this.groupedProcessSteps);
         }
       },
       error: (err) => {
-        console.error('Error fetching process steps', err);
+        // console.error('Error fetching process steps', err);
       }
     });
   }
@@ -1133,11 +1133,11 @@ export class LandingPageComponent implements OnInit {
       next: (res) => {
         if (res.status && res.data?.length > 0) {
           this.caseStudyTitle = res.data[0].title || 'Case Studies';
-          console.log('Case Study Title:', this.caseStudyTitle);
+          // console.log('Case Study Title:', this.caseStudyTitle);
         }
       },
       error: (err) => {
-        console.error('Error fetching case study title', err);
+        // console.error('Error fetching case study title', err);
       }
     });
   }
@@ -1149,11 +1149,11 @@ export class LandingPageComponent implements OnInit {
         if (res.status && res.data?.length > 0) {
           // this.caseStudyImages = res.data.map((img: any) => `${this.baseUrl}${img.image_url}`);
           this.caseStudyImages = res.data;
-          console.log('Case Study Images:', this.caseStudyImages);
+          // console.log('Case Study Images:', this.caseStudyImages);
         }
       },
       error: (err) => {
-        console.error('Error fetching case study images:', err);
+        // console.error('Error fetching case study images:', err);
       }
     });
   }
@@ -1169,11 +1169,11 @@ export class LandingPageComponent implements OnInit {
             ? `${this.baseUrl}${res.data.image_url}`
             : null;
 
-          console.log('Contact Page:', res.data);
+          // console.log('Contact Page:', res.data);
         }
       },
       error: (err) => {
-        console.error('Error fetching contact page data', err);
+        // console.error('Error fetching contact page data', err);
       }
     });
   }
@@ -1183,11 +1183,11 @@ export class LandingPageComponent implements OnInit {
       next: (res) => {
         if (res.status && res.data) {
           this.techMainPage = res.data;  // Store the fetched data
-          console.log('Tech Main Page Data:', this.techMainPage);
+          // console.log('Tech Main Page Data:', this.techMainPage);
         }
       },
       error: (err) => {
-        console.error('Error fetching Tech Main Page data', err);
+        // console.error('Error fetching Tech Main Page data', err);
       }
     });
   }
@@ -1200,11 +1200,11 @@ export class LandingPageComponent implements OnInit {
           const rawData = Array.isArray(res.data) ? res.data : [res.data]; // handle single or array
           this.techList = rawData.filter((tech: any) => tech.is_deleted === 0);
           this.groupedTechList = this.chunkArray(this.techList, 2); // Group in twos
-          console.log('Grouped Tech List:', this.groupedTechList);
+          // console.log('Grouped Tech List:', this.groupedTechList);
         }
       },
       error: (err) => {
-        console.error('Error fetching tech list', err);
+        // console.error('Error fetching tech list', err);
       }
     });
   }
@@ -1217,11 +1217,11 @@ export class LandingPageComponent implements OnInit {
           this.faqTitle = res.data.title;
           this.faqSubheading = res.data.subheading;
           this.faqs = res.data.questions || []; // assuming 'questions' is an array of { question, answer }
-          console.log('FAQ Page Data:', res.data);
+          // console.log('FAQ Page Data:', res.data);
         }
       },
       error: (err) => {
-        console.error('Error fetching FAQ page data', err);
+        // console.error('Error fetching FAQ page data', err);
       }
     });
   }
@@ -1239,10 +1239,10 @@ export class LandingPageComponent implements OnInit {
       if (response.status && response.footerContent) {
         this.footerContent = response.footerContent; // Store the footer content
       } else {
-        console.error('Failed to retrieve footer content');
+        // console.error('Failed to retrieve footer content');
       }
     }, (error) => {
-      console.error('Error fetching footer content:', error);
+      // console.error('Error fetching footer content:', error);
     });
   }
 
@@ -1253,7 +1253,7 @@ export class LandingPageComponent implements OnInit {
         this.socialIcons = response.data;  // Store the social icons in the array
       }
     }, error => {
-      console.error("Error fetching social icons:", error);
+      // console.error("Error fetching social icons:", error);
     });
   }
 
@@ -1265,7 +1265,7 @@ export class LandingPageComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error("Error fetching case study image by ID:", err);
+        // console.error("Error fetching case study image by ID:", err);
       }
     });
   }
@@ -1286,7 +1286,7 @@ export class LandingPageComponent implements OnInit {
           // console.log('Pricing Plans (any):', this.pricingPlans); // Debugging
         } else {
           // Handle cases where the response structure is not as expected
-          console.error('Invalid API response structure for pricing:', response);
+          // console.error('Invalid API response structure for pricing:', response);
           this.pricingError = 'Could not load pricing information due to invalid format.';
           this.pricingPlans = []; // Reset to empty array
         }
@@ -1294,7 +1294,7 @@ export class LandingPageComponent implements OnInit {
         this.cdr.detectChanges(); // Trigger change detection if needed
       },
       error: (err) => {
-        console.error('Error fetching pricing data:', err);
+        // console.error('Error fetching pricing data:', err);
         this.pricingError = 'Failed to load pricing. Please try again later.';
         this.pricingLoading = false;
         this.pricingPlans = []; // Reset to empty array
@@ -1318,7 +1318,7 @@ export class LandingPageComponent implements OnInit {
       const year = date.getFullYear();
       return { month, year };
     } catch (e) {
-      console.error("Error parsing month string:", monthString, e);
+      // console.error("Error parsing month string:", monthString, e);
       return null;
     }
   }
@@ -1355,13 +1355,13 @@ export class LandingPageComponent implements OnInit {
             }));
           } else {
             this.days = []; // Ensure days is empty if API fails or returns no days
-            console.error('Failed to fetch available slots or invalid data:', response?.message);
+            // console.error('Failed to fetch available slots or invalid data:', response?.message);
             // Optionally show snackbar
           }
           this.cdr.detectChanges(); // Update the view with new days
         },
         error: (error) => {
-          console.error('Error fetching available slots:', error);
+          // console.error('Error fetching available slots:', error);
           // this.showSnackbar('Error loading slots for the selected month.');
           this.days = []; // Clear days on error
           this.cdr.detectChanges(); // Update view
@@ -1371,14 +1371,14 @@ export class LandingPageComponent implements OnInit {
 
   /** Triggered when the month dropdown selection changes */
   onMonthChange(): void {
-    console.log("Month changed to:", this.selectedMonth);
+    // console.log("Month changed to:", this.selectedMonth);
     this.loadDaysForSelectedMonth(); // Reload days for the new month
   }
 
 
   selectPlanAndOpenSignup(plan: any): void {
     this.selectedPlan = plan; // Store the selected plan details
-    console.log('Selected Plan:', this.selectedPlan);
+    // console.log('Selected Plan:', this.selectedPlan);
 
     this.packageAmount = plan.price; // Store amount for confirmation popup
     this.selectedPlanTitle = plan.title; // Store plan title
@@ -1431,7 +1431,7 @@ export class LandingPageComponent implements OnInit {
 
   onSignupFormSubmit(): void {
     if (!this.selectedPlan) {
-      console.error('No plan selected');
+      // console.error('No plan selected');
       return;
     }
 
@@ -1457,7 +1457,7 @@ export class LandingPageComponent implements OnInit {
     // Create User Purchase (mark as interested, pending payment)
     this.landingService.createUserPurchase(purchaseData).subscribe({
       next: (response) => {
-        console.log('User created:', response);
+        // console.log('User created:', response);
         this.createdPurchaseId = response.data.id;
         this.createdPurchaseData = purchaseData;
 
@@ -1553,10 +1553,10 @@ export class LandingPageComponent implements OnInit {
   updateUserPurchaseStatus(purchaseId: any, data: any): void {
     this.landingService.updateUserPurchaseStatus(purchaseId, data).subscribe({
       next: (response) => {
-        console.log('Purchase status updated successfully:', response);
+        // console.log('Purchase status updated successfully:', response);
       },
       error: (error) => {
-        console.error('Failed to update purchase status:', error);
+        // console.error('Failed to update purchase status:', error);
         this.showErrorSnackbar('Could not update purchase status.');
       }
     });
