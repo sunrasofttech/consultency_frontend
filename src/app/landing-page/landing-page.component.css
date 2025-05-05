@@ -4177,3 +4177,150 @@ html {
          font-size: 1.3em;
        }
   }
+
+
+ /* Base section styles */
+#video-section, #video-section-empty {
+    background-color: #0b0118;
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    font-family: 'Helvetica', sans-serif;
+    margin-top: 0px;
+    overflow: hidden; /* Keep this to clip cleanly */
+  }
+  #video-section h2 {
+      margin-bottom: 30px;
+      font-size: 2rem;
+  }
+  
+  /* --- SLIDER CONTAINER STYLES --- */
+  .video-section-videos {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto; /* Keep this to enable scrolling */
+    gap: 20px;
+    scroll-snap-type: x mandatory;
+    padding: 0 10px 15px 10px; /* Keep padding-bottom for space */
+    border: none;
+    border-radius: 0;
+    scroll-padding-left: 10px;
+    scroll-padding-right: 10px;
+  
+    /* --- START: SCROLLBAR STYLING --- */
+  
+    /* --- Firefox Scrollbar Styling --- */
+    /* 'thin' makes it less obtrusive, 'auto' is default */
+    scrollbar-width: thin;
+    /* Pair of colors: thumb color, track color */
+    scrollbar-color: #5a2d85 #1e0627; /* Example: Purple thumb, dark track */
+  
+    /* --- WebKit (Chrome, Safari, Edge) Scrollbar Styling --- */
+    /* Width of the entire scrollbar */
+    &::-webkit-scrollbar {
+      height: 8px; /* Height for horizontal scrollbar */
+      /* width: 8px; */ /* Use width for vertical scrollbar */
+    }
+  
+    /* Track (the area the scrollbar moves along) */
+    &::-webkit-scrollbar-track {
+      background: #1e0627; /* Dark background for the track */
+      border-radius: 4px; /* Slightly rounded track */
+    }
+  
+    /* Handle (the draggable part) */
+    &::-webkit-scrollbar-thumb {
+      background-color: #5a2d85; /* Purple color for the handle */
+      border-radius: 4px; /* Match track rounding */
+      border: 1px solid #1e0627; /* Optional: small border matching track */
+    }
+  
+    /* Handle on hover (optional) */
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: #7743b2; /* Lighter purple on hover */
+    }
+  
+    /* --- END: SCROLLBAR STYLING --- */
+  
+  }
+  
+  /* --- VIDEO ITEM STYLES (Inside the Slider) --- */
+  .video-item-container {
+    flex: 0 0 calc(33.333% - 14px);
+    width: calc(33.333% - 14px);
+    scroll-snap-align: start;
+  }
+  
+  /* --- VIDEO PLAYER STYLES (Unchanged) --- */
+  .video-player {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border-radius: 8px;
+    background-color: #1a1a1a;
+  }
+  
+  /* --- VIDEO PLACEHOLDER STYLES (Unchanged) --- */
+  .video-placeholder {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      color: #ccc;
+      background-color: #222;
+      border: 1px dashed #444;
+      font-size: 0.9em;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+  }
+  
+  /* --- NO VIDEOS MESSAGE (Unchanged) --- */
+  .no-videos-message {
+      text-align: center;
+      padding: 30px;
+      color: #aaa;
+      font-style: italic;
+  }
+  
+  
+  /* --- Media Query for Mobile --- */
+  @media (max-width: 768px) {
+    .video-section-videos {
+      gap: 15px;
+      padding: 0 5px 15px 5px;
+      scroll-padding-left: 5px;
+      scroll-padding-right: 5px;
+  
+      /* --- Firefox Scrollbar Styling for Mobile --- */
+      /* You might want it slightly thinner or keep it the same */
+      scrollbar-width: thin;
+      scrollbar-color: #5a2d85 #1e0627;
+  
+      /* --- WebKit Scrollbar Styling for Mobile --- */
+      &::-webkit-scrollbar {
+          height: 6px; /* Make scrollbar thinner on mobile */
+      }
+       &::-webkit-scrollbar-thumb {
+          /* Keep colors or adjust if needed */
+       }
+       &::-webkit-scrollbar-track {
+           /* Keep colors or adjust if needed */
+       }
+    }
+  
+    .video-item-container {
+      flex: 0 0 95%;
+      width: 95%;
+      scroll-snap-align: start;
+    }
+  }
+  
+  /* Optional: Fine-tune for very small phones if needed */
+  /* @media (max-width: 480px) { ... } */
+
+
+  

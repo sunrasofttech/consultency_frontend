@@ -4,7 +4,7 @@ import { LandingPageService } from '../services/landing-page.service';
 import { environment } from 'src/environments/environment';
 import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
-
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 interface NavbarItem {
   id: number;
@@ -24,6 +24,17 @@ interface DayOption {
   slotsText: string;
   slotsClass: string;
   available: boolean;
+}
+
+// --- Add VideoSection interface (optional but recommended) ---
+interface VideoSection {
+  id: number;
+  title: string;
+  youtube_link: string | null;
+  video_file: string | null;
+  status: 'active' | 'inactive';
+  sort_order: number;
+  // Add other fields if needed
 }
 
 declare var Razorpay: any;
@@ -161,11 +172,23 @@ export class LandingPageComponent implements OnInit {
   createdPurchaseId: string | null = null;
   createdPurchaseData: any = null;
 
+
+
+   // +++ ADD Property for Video Sections +++
+   videoSections: VideoSection[] = []; // Store fetched video data
+
+
+
+
+
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
   @ViewChildren('videoRef') videoRefs!: QueryList<ElementRef<HTMLVideoElement>>;
 
-  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef) { }
+  
+
+
+  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
     this.fetchNavBar();
@@ -189,6 +212,9 @@ export class LandingPageComponent implements OnInit {
     this.generateMonthOptions();
 
     this.fetchFooterSocialIcons();
+
+     // +++ ADD Call to fetch videos +++
+     this.fetchVideoSections();
 
     this.isMobile = window.innerWidth <= 600;
 
@@ -1080,6 +1106,86 @@ export class LandingPageComponent implements OnInit {
         // console.error('Error fetching client logos:', err);
       }
     });
+  }
+
+
+   // Method to fetch videos from your service
+  fetchVideoSections(): void {
+    this.landingService.getAllVideoSections().subscribe({
+      next: (res) => {
+        if (res.status && Array.isArray(res.data)) {
+          this.videoSections = res.data;
+        } else {
+          this.videoSections = [];
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching video sections:', err);
+        this.videoSections = [];
+      }
+    });
+  }
+
+  // Helper to securely create YouTube embed URLs for iframes
+  sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
+    if (!url) return null;
+    const videoId = this.extractYoutubeVideoId(url);
+    if (!videoId) return null; // Invalid YouTube URL
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    // Tell Angular this URL is safe to use in an iframe
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  // Helper to get the ID from various YouTube URL formats
+  extractYoutubeVideoId(url: string): string | null {
+     if (!url) return null;
+     // Regex simplified - look for standard patterns
+     const patterns = [
+       /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+       /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+       /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+       /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+     ];
+     for (const pattern of patterns) {
+       const match = url.match(pattern);
+       if (match && match[1]) {
+         return match[1];
+       }
+     }
+     return null; // No ID found
+   }
+
+
+
+  // +++ ADD Placeholder for Popup Logic +++
+  openVideoPopup(videoId: number): void {
+    console.log('Open popup requested for video ID:', videoId);
+    const selectedVideo = this.videoSections.find(v => v.id === videoId);
+    if (selectedVideo) {
+       console.log('Selected Video Data:', selectedVideo);
+       // TODO: Implement your popup logic here.
+       // You'll likely need to:
+       // 1. Have a popup component or modal service.
+       // 2. Pass the `selectedVideo.youtube_link` or `selectedVideo.video_file` (prefixed with `baseUrl`) to the popup.
+       // 3. Use DomSanitizer to trust the URL if embedding in an iframe.
+       // Example:
+       // let videoSourceUrl: string | null = null;
+       // if (selectedVideo.youtube_link) {
+       //    const videoId = this.extractYoutubeVideoId(selectedVideo.youtube_link);
+       //    videoSourceUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+       // } else if (selectedVideo.video_file) {
+       //    videoSourceUrl = this.baseUrl + selectedVideo.video_file;
+       // }
+       // if (videoSourceUrl) {
+       //    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(videoSourceUrl);
+       //    // Now open your popup/modal and pass 'safeUrl' or 'videoSourceUrl'
+       //    // this.openModal(safeUrl);
+       // } else {
+       //    console.error("No valid video source found for popup");
+       // }
+    } else {
+       console.error('Video not found for ID:', videoId);
+    }
   }
 
 
