@@ -162,5 +162,15 @@ export class LandingPageService {
     return this.http.post<any>(url, data);
   }
 
+  // +++ ADD THIS METHOD +++
+  /**
+   * Fetches all active video sections ordered by sort_order.
+   */
+  getAllVideoSections(): Observable<any> {
+    // Assuming the endpoint is relative to the base API URL
+    return this.http.post<any>(`${this.baseUrl}/admin/getAllVideoSections`, {});
+    // If the endpoint was NOT under /api, you'd adjust the URL construction
+  }
+
 
 }
