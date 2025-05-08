@@ -4318,9 +4318,71 @@ html {
       scroll-snap-align: start;
     }
   }
+
+  
   
   /* Optional: Fine-tune for very small phones if needed */
   /* @media (max-width: 480px) { ... } */
 
 
+  /* Style for discounted price display */
+.discounted-price .original-price {
+    text-decoration: line-through;
+    color: #999; /* Lighter color for original price */
+    font-size: 0.9em; /* Slightly smaller */
+    margin-right: 10px;
+  }
+  
+  .discounted-price .currency-symbol {
+      /* Styles for the main discounted price currency symbol if needed */
+  }
+  
+  .discount-badge {
+      display: inline-block;
+      background-color: #e44d26; /* Example color */
+      color: white;
+      padding: 2px 6px;
+      font-size: 0.7em;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle; /* Align badge nicely */
+  }
+  
+ 
+  
+  /* Ensure pricing popup styles accommodate potential badges/styling */
+  .pricing-popup-content h3 {
+      /* Adjust margins/padding if needed */
+      margin-bottom: 15px;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  .video-section-videos {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 20px;
+    scroll-snap-type: x mandatory;
+    padding: 0 10px 15px 10px;
+    scroll-padding-left: 10px;
+    scroll-padding-right: 10px;
+  }
+  
+  /* Apply only when < 3 videos */
+  .video-section-videos.center-content {
+    justify-content: center;
+    flex-wrap: wrap;         /* allow wrapping when < 3 */
+    overflow-x: hidden;
+  }
   
