@@ -5,6 +5,9 @@ import { environment } from 'src/environments/environment';
 import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ActivatedRoute, ParamMap } from '@angular/router'; // <-- Import 
+
+
 
 interface NavbarItem {
   id: number;
@@ -31,7 +34,11 @@ interface VideoSection {
   id: number;
   title: string;
   youtube_link: string | null;
+  youtube_link_en?: string | null; // <-- ADD English link (make optional with ?)
+  youtube_link_hi?: string | null; // <-- ADD Hindi link (make optional with ?)
   video_file: string | null;
+  video_file_en?: string | null; // English uploaded file
+  video_file_hi?: string | null; // Hindi uploaded file
   status: 'active' | 'inactive';
   sort_order: number;
   // Add other fields if needed
@@ -174,9 +181,18 @@ export class LandingPageComponent implements OnInit {
 
 
 
-   // +++ ADD Property for Video Sections +++
-   videoSections: VideoSection[] = []; // Store fetched video data
+  // +++ ADD Property for Video Sections +++
+  videoSections: VideoSection[] = []; // Store fetched video data
 
+  // --- Language Detection ---
+  userLanguage: 'en' | 'hi' = 'en'; // Default to English
+  displayVideoUrl: SafeResourceUrl | null = null; // URL to display in iframe
+
+  // --- Facebook Referral ---
+  isFacebookReferral: boolean = false;
+
+  displayableVideoSections: VideoSection[] = []; // New property
+ 
 
 
 
@@ -185,12 +201,20 @@ export class LandingPageComponent implements OnInit {
   @ViewChildren('videoRef') videoElements!: QueryList<ElementRef>;
   @ViewChildren('videoRef') videoRefs!: QueryList<ElementRef<HTMLVideoElement>>;
 
-  
 
 
-  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) { }
+
+  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer, private route: ActivatedRoute) { }
 
   ngOnInit(): void {
+
+    // --- Language Detection ---
+    this.detectUserLanguage();
+
+    // --- Facebook Referrer Detection ---
+    this.detectFacebookReferral();
+
+
     this.fetchNavBar();
     this.fetchLandingPageInfo();
     this.fetchLandingPageBanners(); // Fetch banners on component initialization
@@ -213,8 +237,8 @@ export class LandingPageComponent implements OnInit {
 
     this.fetchFooterSocialIcons();
 
-     // +++ ADD Call to fetch videos +++
-     this.fetchVideoSections();
+    // +++ ADD Call to fetch videos +++
+    this.fetchVideoSections();
 
     this.isMobile = window.innerWidth <= 600;
 
@@ -225,6 +249,171 @@ export class LandingPageComponent implements OnInit {
     this.isMobile = window.innerWidth <= 480;
   }
 
+
+  // Modify detectUserLanguage to also update displayable videos
+  // detectUserLanguage(): void {
+  //   const browserLang = navigator.language || (navigator as any).userLanguage;
+  //   if (browserLang && browserLang.toLowerCase().startsWith('hi')) {
+  //     this.userLanguage = 'hi';
+  //   } else {
+  //     this.userLanguage = 'en';
+  //   }
+  //   console.log('Detected language:', this.userLanguage);
+  //   this.updateDisplayableVideos(); // Update when language changes
+  // }
+
+  // // New method to filter videos based on language and availability
+  // updateDisplayableVideos(): void {
+  //   if (!this.videoSections || this.videoSections.length === 0) {
+  //     this.displayableVideoSections = [];
+  //     return;
+  //   }
+  //   this.displayableVideoSections = this.videoSections.filter(video => {
+  //     if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
+  //       return true;
+  //     } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
+  //       return true;
+  //     } else if (video.video_file) { // If it has a self-hosted file, it's displayable
+  //       return true;
+  //     }
+  //     // Optional: Add fallback to generic youtube_link if desired
+  //     // else if (video.youtube_link && video.youtube_link.trim() !== "") {
+  //     //   return true;
+  //     // }
+  //     return false; // Otherwise, don't include it for display
+  //   });
+  //   console.log('Displayable videos for current language:', this.displayableVideoSections);
+  // }
+
+
+
+  // --- Facebook Referral Detection Method ---
+  detectFacebookReferral(): void {
+    this.route.queryParamMap.subscribe(params => {
+      const source = params.get('utm_source'); // Check for 'utm_source'
+      const medium = params.get('utm_medium'); // Optional: check medium too
+      // Add more specific checks if needed (e.g., campaign)
+      if (source && source.toLowerCase() === 'facebook') {
+        this.isFacebookReferral = true;
+        console.log('Facebook referral detected!');
+        // If prices are already loaded, adjust them now
+        if (this.pricingPlans.length > 0) {
+          this.applyFacebookDiscount();
+        }
+      } else {
+        this.isFacebookReferral = false;
+      }
+    });
+  }
+
+  // // --- Method to apply discount based on Facebook referral and language ---
+  // applyFacebookDiscount(): void {
+  //   console.log('Attempting to apply Facebook discount. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
+
+  //   this.pricingPlans = this.pricingPlans.map((plan: any) => { // Ensure 'plan' has a type, 'any' or a specific interface
+  //     // Make sure all price fields from API are numbers
+  //     const standardPrice = parseFloat(plan.price);
+  //     const fbPriceEn = plan.facebook_price_en !== null && plan.facebook_price_en !== undefined ? parseFloat(plan.facebook_price_en) : null;
+  //     const fbPriceHi = plan.facebook_price_hi !== null && plan.facebook_price_hi !== undefined ? parseFloat(plan.facebook_price_hi) : null;
+
+  //     let finalPrice = standardPrice; // Default to standard price
+  //     let isActuallyDiscounted = false;
+  //     const originalDisplayPrice = standardPrice; // This is the price before any FB logic
+
+  //     if (this.isFacebookReferral) {
+  //       console.log(`Plan ${plan.id}: Is Facebook referral. Checking prices...`);
+  //       console.log(`   Standard Price: ${standardPrice}`);
+  //       console.log(`   FB Price EN: ${fbPriceEn}`);
+  //       console.log(`   FB Price HI: ${fbPriceHi}`);
+
+  //       // --- STEP 1: Prioritize facebook_price_hi if from Facebook (as per your latest request) ---
+  //       if (fbPriceHi !== null && !isNaN(fbPriceHi)) {
+  //         finalPrice = fbPriceHi;
+  //         isActuallyDiscounted = finalPrice < standardPrice;
+  //         console.log(`   Using facebook_price_hi: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
+  //       }
+  //       // --- STEP 2: (LATER) Add language condition here: ---
+  //       // else if (this.userLanguage === 'en' && fbPriceEn !== null && !isNaN(fbPriceEn)) {
+  //       //   finalPrice = fbPriceEn;
+  //       //   isActuallyDiscounted = finalPrice < standardPrice;
+  //       //   console.log(`   User lang EN, using facebook_price_en: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
+  //       // }
+  //       else {
+  //           // If not Hindi FB price, and (later) not English FB price,
+  //           // or if FB prices are not valid numbers, it means no specific FB discount applies for this plan/language.
+  //           // The finalPrice remains the standardPrice.
+  //           // We still mark original_price for consistency if it was a FB referral.
+  //           console.log(`   No applicable Facebook price for this language/plan. Using standard price: ${finalPrice}`);
+  //       }
+  //     } else {
+  //       console.log(`Plan ${plan.id}: Not a Facebook referral. Using standard price.`);
+  //       // finalPrice is already standardPrice, isActuallyDiscounted is false
+  //     }
+
+  //     return {
+  //       ...plan, // Spread the original plan
+  //       price: finalPrice,                 // The price to be displayed and used for payment
+  //       original_price: originalDisplayPrice, // The standard price before any FB-specific logic
+  //       is_discounted: isActuallyDiscounted  // True if finalPrice is lower than originalDisplayPrice
+  //     };
+  //   });
+
+  //   console.log('Pricing Plans AFTER applyFacebookDiscount:', JSON.stringify(this.pricingPlans, null, 2));
+  //   this.cdr.detectChanges(); // Notify Angular of the changes
+  // }
+
+
+
+    // --- *** REVISED applyFacebookDiscount *** ---
+    applyFacebookDiscount(): void {
+      // console.log('Applying discount logic. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
+  
+      this.pricingPlans = this.pricingPlans.map((plan: any) => {
+        // Ensure prices are numbers
+        const standardPrice = parseFloat(plan.price);
+        const fbPriceEn = plan.facebook_price_en !== null && plan.facebook_price_en !== undefined ? parseFloat(plan.facebook_price_en) : null;
+        const fbPriceHi = plan.facebook_price_hi !== null && plan.facebook_price_hi !== undefined ? parseFloat(plan.facebook_price_hi) : null;
+  
+        let finalPrice = standardPrice;
+        let isActuallyDiscounted = false;
+        const originalDisplayPrice = standardPrice; // Base price before FB logic
+  
+        if (this.isFacebookReferral) {
+          // console.log(`Plan ${plan.id}: Is FB referral. Lang: ${this.userLanguage}`);
+  
+          if (this.userLanguage === 'hi' && fbPriceHi !== null && !isNaN(fbPriceHi)) {
+            finalPrice = fbPriceHi;
+            isActuallyDiscounted = finalPrice < standardPrice;
+            // console.log(` -> Using FB Hindi price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
+          } else if (this.userLanguage === 'en' && fbPriceEn !== null && !isNaN(fbPriceEn)) {
+            finalPrice = fbPriceEn;
+            isActuallyDiscounted = finalPrice < standardPrice;
+            // console.log(` -> Using FB English price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
+          } else {
+            // From FB, but no specific valid price for this language, use standard
+            finalPrice = standardPrice;
+            isActuallyDiscounted = false; // Not discounted compared to standard
+            // console.log(` -> No specific FB price for lang ${this.userLanguage}. Using standard price: ${finalPrice}`);
+          }
+        } else {
+          // Not from FB, use standard price
+          finalPrice = standardPrice;
+          isActuallyDiscounted = false;
+          //  console.log(`Plan ${plan.id}: Not FB referral. Using standard price: ${finalPrice}`);
+        }
+  
+        return {
+          ...plan,
+          price: finalPrice,
+          original_price: originalDisplayPrice, // Store the standard price for display if discounted
+          is_discounted: isActuallyDiscounted
+        };
+      });
+  
+      // console.log('Pricing Plans AFTER discount logic:', JSON.stringify(this.pricingPlans, null, 2));
+      this.cdr.detectChanges();
+    }
+  
   toggleAnswer(index: number): void {
     this.expandedIndex = this.expandedIndex === index ? null : index;
   }
@@ -527,7 +716,7 @@ export class LandingPageComponent implements OnInit {
 
   closeDateTimePopup(): void {
 
-    console.log("CLose SETTIme Call")
+    // console.log("CLose SETTIme Call")
     this.showDateTimePopup = false;
     this.date = '';
     this.time = '';
@@ -1109,82 +1298,216 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-   // Method to fetch videos from your service
-  fetchVideoSections(): void {
-    this.landingService.getAllVideoSections().subscribe({
-      next: (res) => {
-        if (res.status && Array.isArray(res.data)) {
-          this.videoSections = res.data;
-        } else {
-          this.videoSections = [];
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching video sections:', err);
-        this.videoSections = [];
-      }
+  // Method to fetch videos from your service
+  // fetchVideoSections(): void {
+  //   this.landingService.getAllVideoSections().subscribe({
+  //     next: (res) => {
+  //       if (res.status && Array.isArray(res.data)) {
+  //         this.videoSections = res.data;
+  //       } else {
+  //         this.videoSections = [];
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error fetching video sections:', err);
+  //       this.videoSections = [];
+  //     }
+  //   });
+  // }
+
+  // Modified fetchVideoSections to handle language AND optional links
+  // fetchVideoSections(): void {
+  //   this.landingService.getAllVideoSections().subscribe({
+  //     next: (res) => {
+  //       if (res.status && Array.isArray(res.data) && res.data.length > 0) {
+  //         const firstVideoData = res.data[0] as VideoSection; // Use the updated interface
+
+  //         let targetUrl: string | null = null;
+
+  //         // Prioritize language-specific link if available
+  //         if (this.userLanguage === 'hi' && firstVideoData.youtube_link_hi) {
+  //           targetUrl = firstVideoData.youtube_link_hi;
+  //           console.log('Using Hindi YouTube link:', targetUrl);
+  //         } else if (firstVideoData.youtube_link_en) { // Check for English link next
+  //           targetUrl = firstVideoData.youtube_link_en;
+  //           console.log('Using English YouTube link:', targetUrl);
+  //         } else {
+  //           // Fallback to the original 'youtube_link' if no language-specific ones found
+  //           targetUrl = firstVideoData.youtube_link;
+  //           console.log('Using default/fallback YouTube link:', targetUrl);
+  //         }
+
+  //         this.displayVideoUrl = this.sanitizeYoutubeUrl(targetUrl);
+
+  //       } else {
+  //         this.videoSections = [];
+  //         this.displayVideoUrl = null;
+  //         console.log('No suitable video data found or API error.');
+  //       }
+  //       this.cdr.detectChanges();
+  //     },
+  //     error: (err) => {
+  //       console.error('Error fetching video sections:', err);
+  //       this.videoSections = [];
+  //       this.displayVideoUrl = null;
+  //     }
+  //   });
+  // }
+
+
+
+
+  // fetchVideoSections(): void {
+  //   this.landingService.getAllVideoSections().subscribe({
+  //     next: (res) => {
+  //       if (res.status && Array.isArray(res.data)) {
+  //         this.videoSections = res.data.filter((video: VideoSection) => video.status === 'active');
+  //         this.updateDisplayableVideos(); // Call new method to filter
+  //       } else {
+  //         this.videoSections = [];
+  //         this.displayableVideoSections = [];
+  //       }
+  //       this.cdr.detectChanges();
+  //     },
+  //     error: (err) => { /* ... */ }
+  //   });
+  // }
+
+
+  // getVideoUrlForLanguage remains mostly the same, but it assumes the video passed to it IS displayable
+  getVideoUrlForLanguage(video: VideoSection): SafeResourceUrl | null {
+    let targetUrl: string | null = null;
+    if (!video) return null;
+
+    if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
+      targetUrl = video.youtube_link_hi;
+    } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
+      targetUrl = video.youtube_link_en;
+    } else if (video.youtube_link && video.youtube_link.trim() !== "") { // Fallback if added in updateDisplayableVideos
+       targetUrl = video.youtube_link;
+    }
+    // No need to check video.video_file here as this function is for YouTube URLs
+
+    if (targetUrl) {
+      return this.sanitizeYoutubeUrl(targetUrl);
+    }
+    return null;
+  }
+
+
+
+  getDisplayableVideos(): VideoSection[] {
+    if (!this.videoSections || this.videoSections.length === 0) {
+      return [];
+    }
+    return this.videoSections.filter(video => {
+      // Check if there's a YouTube URL for the current language
+      if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") return true;
+      if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") return true;
+      // Or if there's an uploaded video file (assuming uploaded files are language-agnostic or you handle that differently)
+      if (video.video_file) return true;
+      // Or if you want to use the fallback youtube_link when specific lang version is missing
+      // if (video.youtube_link && video.youtube_link.trim() !== "") return true; 
+      return false;
     });
   }
 
-  // Helper to securely create YouTube embed URLs for iframes
+
+
+  // Keep sanitizeYoutubeUrl and extractYoutubeVideoId as they are
   sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
     if (!url) return null;
     const videoId = this.extractYoutubeVideoId(url);
-    if (!videoId) return null; // Invalid YouTube URL
-    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-    // Tell Angular this URL is safe to use in an iframe
+    if (!videoId) {
+      // console.warn('Could not extract YouTube video ID from:', url);
+      return null; // Invalid YouTube URL
+    }
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`; // Added autoplay, mute, loop
     return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 
-  // Helper to get the ID from various YouTube URL formats
   extractYoutubeVideoId(url: string): string | null {
-     if (!url) return null;
-     // Regex simplified - look for standard patterns
-     const patterns = [
-       /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-       /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-       /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-       /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
-     ];
-     for (const pattern of patterns) {
-       const match = url.match(pattern);
-       if (match && match[1]) {
-         return match[1];
-       }
-     }
-     return null; // No ID found
-   }
+    // ...(keep existing implementation)...
+    if (!url) return null;
+    const patterns = [
+      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    // console.warn('Could not match YouTube ID pattern for:', url);
+    return null; // No ID found
+  }
+
+
+
+
+
+  // Helper to securely create YouTube embed URLs for iframes
+  // sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
+  //   if (!url) return null;
+  //   const videoId = this.extractYoutubeVideoId(url);
+  //   if (!videoId) return null; // Invalid YouTube URL
+  //   const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  //   // Tell Angular this URL is safe to use in an iframe
+  //   return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  // }
+
+  // Helper to get the ID from various YouTube URL formats
+  // extractYoutubeVideoId(url: string): string | null {
+  //   if (!url) return null;
+  //   // Regex simplified - look for standard patterns
+  //   const patterns = [
+  //     /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+  //     /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+  //     /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  //     /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+  //   ];
+  //   for (const pattern of patterns) {
+  //     const match = url.match(pattern);
+  //     if (match && match[1]) {
+  //       return match[1];
+  //     }
+  //   }
+  //   return null; // No ID found
+  // }
 
 
 
   // +++ ADD Placeholder for Popup Logic +++
   openVideoPopup(videoId: number): void {
-    console.log('Open popup requested for video ID:', videoId);
+    // console.log('Open popup requested for video ID:', videoId);
     const selectedVideo = this.videoSections.find(v => v.id === videoId);
     if (selectedVideo) {
-       console.log('Selected Video Data:', selectedVideo);
-       // TODO: Implement your popup logic here.
-       // You'll likely need to:
-       // 1. Have a popup component or modal service.
-       // 2. Pass the `selectedVideo.youtube_link` or `selectedVideo.video_file` (prefixed with `baseUrl`) to the popup.
-       // 3. Use DomSanitizer to trust the URL if embedding in an iframe.
-       // Example:
-       // let videoSourceUrl: string | null = null;
-       // if (selectedVideo.youtube_link) {
-       //    const videoId = this.extractYoutubeVideoId(selectedVideo.youtube_link);
-       //    videoSourceUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-       // } else if (selectedVideo.video_file) {
-       //    videoSourceUrl = this.baseUrl + selectedVideo.video_file;
-       // }
-       // if (videoSourceUrl) {
-       //    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(videoSourceUrl);
-       //    // Now open your popup/modal and pass 'safeUrl' or 'videoSourceUrl'
-       //    // this.openModal(safeUrl);
-       // } else {
-       //    console.error("No valid video source found for popup");
-       // }
+      // console.log('Selected Video Data:', selectedVideo);
+      // TODO: Implement your popup logic here.
+      // You'll likely need to:
+      // 1. Have a popup component or modal service.
+      // 2. Pass the `selectedVideo.youtube_link` or `selectedVideo.video_file` (prefixed with `baseUrl`) to the popup.
+      // 3. Use DomSanitizer to trust the URL if embedding in an iframe.
+      // Example:
+      // let videoSourceUrl: string | null = null;
+      // if (selectedVideo.youtube_link) {
+      //    const videoId = this.extractYoutubeVideoId(selectedVideo.youtube_link);
+      //    videoSourceUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+      // } else if (selectedVideo.video_file) {
+      //    videoSourceUrl = this.baseUrl + selectedVideo.video_file;
+      // }
+      // if (videoSourceUrl) {
+      //    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(videoSourceUrl);
+      //    // Now open your popup/modal and pass 'safeUrl' or 'videoSourceUrl'
+      //    // this.openModal(safeUrl);
+      // } else {
+      //    console.error("No valid video source found for popup");
+      // }
     } else {
-       console.error('Video not found for ID:', videoId);
+      // console.error('Video not found for ID:', videoId);
     }
   }
 
@@ -1381,33 +1704,99 @@ export class LandingPageComponent implements OnInit {
   }
 
 
+  // fetchPricingData(): void {
+  //   this.pricingLoading = true;
+  //   this.pricingError = null;
+  //   this.landingService.getPricingPopupContent().subscribe({
+  //     next: (response: any) => { // Explicitly receive 'any'
+  //       // **Basic Validation is important when using 'any'**
+  //       if (response && response.status === true && Array.isArray(response.data)) {
+  //         this.pricingPlans = response.data; // Assign the data array
+  //         // console.log('Pricing Plans (any):', this.pricingPlans); // Debugging
+  //       } else {
+  //         // Handle cases where the response structure is not as expected
+  //         // console.error('Invalid API response structure for pricing:', response);
+  //         this.pricingError = 'Could not load pricing information due to invalid format.';
+  //         this.pricingPlans = []; // Reset to empty array
+  //       }
+  //       this.pricingLoading = false;
+  //       this.cdr.detectChanges(); // Trigger change detection if needed
+  //     },
+  //     error: (err) => {
+  //       // console.error('Error fetching pricing data:', err);
+  //       this.pricingError = 'Failed to load pricing. Please try again later.';
+  //       this.pricingLoading = false;
+  //       this.pricingPlans = []; // Reset to empty array
+  //       this.cdr.detectChanges(); // Trigger change detection if needed
+  //     }
+  //   });
+  // }
+
+
+  // fetchPricingData(): void {
+  //   this.pricingLoading = true;
+  //   this.pricingError = null;
+  //   this.landingService.getPricingPopupContent().subscribe({
+  //     next: (response: any) => {
+  //       console.log('Raw API pricing response:', JSON.stringify(response, null, 2));
+  //       if (response && response.status === true && Array.isArray(response.data)) {
+  //         // Assign raw data first
+  //         this.pricingPlans = response.data;
+  //         console.log('Pricing Plans before discount logic:', JSON.stringify(this.pricingPlans, null, 2));
+
+  //         // Now, apply the discount logic. This function will iterate through pricingPlans
+  //         // and set 'price', 'original_price', and 'is_discounted' for each plan.
+  //         this.applyFacebookDiscount();
+
+  //       } else {
+  //         this.pricingError = 'Could not load pricing information due to invalid format.';
+  //         this.pricingPlans = [];
+  //       }
+  //       this.pricingLoading = false;
+  //       this.cdr.detectChanges();
+  //     },
+  //     error: (err) => {
+  //       console.error('Error fetching pricing data:', err);
+  //       this.pricingError = 'Failed to load pricing. Please try again later.';
+  //       this.pricingLoading = false;
+  //       this.pricingPlans = [];
+  //       this.cdr.detectChanges();
+  //     }
+  //   });
+  // }
+
+
+
+  // --- *** REVISED fetchPricingData *** ---
   fetchPricingData(): void {
     this.pricingLoading = true;
     this.pricingError = null;
     this.landingService.getPricingPopupContent().subscribe({
-      next: (response: any) => { // Explicitly receive 'any'
-        // **Basic Validation is important when using 'any'**
+      next: (response: any) => {
+        // console.log('Raw API pricing response:', JSON.stringify(response, null, 2));
         if (response && response.status === true && Array.isArray(response.data)) {
-          this.pricingPlans = response.data; // Assign the data array
-          // console.log('Pricing Plans (any):', this.pricingPlans); // Debugging
+          // Assign raw data first
+          this.pricingPlans = response.data;
+          // console.log('Pricing Plans before discount logic:', JSON.stringify(this.pricingPlans, null, 2));
+          // Apply the discount logic (which now handles FB + language)
+          this.applyFacebookDiscount(); // This sets price, original_price, is_discounted
         } else {
-          // Handle cases where the response structure is not as expected
-          // console.error('Invalid API response structure for pricing:', response);
-          this.pricingError = 'Could not load pricing information due to invalid format.';
-          this.pricingPlans = []; // Reset to empty array
+          this.pricingError = 'Could not load pricing info.';
+          this.pricingPlans = [];
         }
         this.pricingLoading = false;
-        this.cdr.detectChanges(); // Trigger change detection if needed
+        this.cdr.detectChanges();
       },
       error: (err) => {
         // console.error('Error fetching pricing data:', err);
-        this.pricingError = 'Failed to load pricing. Please try again later.';
+        this.pricingError = 'Failed to load pricing.';
         this.pricingLoading = false;
-        this.pricingPlans = []; // Reset to empty array
-        this.cdr.detectChanges(); // Trigger change detection if needed
+        this.pricingPlans = [];
+        this.cdr.detectChanges();
       }
     });
   }
+
 
 
 
@@ -1482,18 +1871,33 @@ export class LandingPageComponent implements OnInit {
   }
 
 
+  // selectPlanAndOpenSignup(plan: any): void {
+  //   this.selectedPlan = plan; // Store the selected plan details
+  //   // console.log('Selected Plan:', this.selectedPlan);
+
+  //   this.packageAmount = plan.price; // Store amount for confirmation popup
+  //   this.selectedPlanTitle = plan.title; // Store plan title
+  //   this.showSignupForm = true; // Show the signup form
+  //   this.showSignupForm = true; // Show the signup form
+
+  //   // Optional: Decide if you want to close the pricing popup when signup opens
+  //   // this.showPricingPopup = false;
+  // }
+
+
+  // Ensure the correct price is used when selecting a plan
   selectPlanAndOpenSignup(plan: any): void {
-    this.selectedPlan = plan; // Store the selected plan details
-    // console.log('Selected Plan:', this.selectedPlan);
+    this.selectedPlan = plan; // plan already has the potentially discounted price
+    // console.log('Selected Plan (Price might be discounted):', this.selectedPlan);
 
-    this.packageAmount = plan.price; // Store amount for confirmation popup
-    this.selectedPlanTitle = plan.title; // Store plan title
-    this.showSignupForm = true; // Show the signup form
-    this.showSignupForm = true; // Show the signup form
-
-    // Optional: Decide if you want to close the pricing popup when signup opens
-    // this.showPricingPopup = false;
+    this.packageAmount = plan.price; // Use the current price (discounted or not)
+    this.selectedPlanTitle = plan.title;
+    this.showSignupForm = true;
   }
+
+
+
+
 
   closeSignupForm(): void {
     this.showSignupForm = false; // Hide the signup form
@@ -1535,72 +1939,158 @@ export class LandingPageComponent implements OnInit {
 
 
 
+  // onSignupFormSubmit(): void {
+  //   if (!this.selectedPlan) {
+  //     // console.error('No plan selected');
+  //     return;
+  //   }
+
+  //   if (!this.signupData.name || !this.signupData.email || !this.signupData.phone || !this.signupData.project_name || !this.signupData.project_description) {
+  //     alert("Please fill all required fields.");
+  //     return;
+  //   }
+
+  //   this.packageAmount = this.selectedPlan.price;
+  //   this.selectedPlanTitle = this.selectedPlan.title;
+  //   this.showConfirmPricePaymentPopup = true;
+
+  //   const purchaseData = {
+  //     name: this.signupData.name,
+  //     email: this.signupData.email,
+  //     phone: this.signupData.phone,
+  //     pricing_popup_id: this.selectedPlan.id,
+  //     price: this.selectedPlan.price,
+  //     project_name: this.signupData.project_name,
+  //     project_description: this.signupData.project_description
+  //   };
+
+  //   // Create User Purchase (mark as interested, pending payment)
+  //   this.landingService.createUserPurchase(purchaseData).subscribe({
+  //     next: (response) => {
+  //       // console.log('User created:', response);
+  //       this.createdPurchaseId = response.data.id;
+  //       this.createdPurchaseData = purchaseData;
+
+  //       // 2. Then show popup
+  //       this.packageAmount = this.selectedPlan.price;
+  //       this.selectedPlanTitle = this.selectedPlan.title;
+  //       // this.showConfirmPricePaymentPopup = true;
+  //       setTimeout(() => {
+  //         this.showConfirmPricePaymentPopup = true;
+  //       }, 2000); // 2000 milliseconds = 3 seconds
+
+  //     },
+
+  //   });
+  // }
+
+  // Ensure the correct price is passed when submitting the signup form
   onSignupFormSubmit(): void {
     if (!this.selectedPlan) {
       // console.error('No plan selected');
       return;
     }
-
     if (!this.signupData.name || !this.signupData.email || !this.signupData.phone || !this.signupData.project_name || !this.signupData.project_description) {
       alert("Please fill all required fields.");
       return;
     }
 
-    this.packageAmount = this.selectedPlan.price;
+    // Use the price from the selectedPlan (which might be discounted)
+    const finalPrice = this.selectedPlan.price;
+    this.packageAmount = finalPrice; // Update confirmation amount
     this.selectedPlanTitle = this.selectedPlan.title;
-    this.showConfirmPricePaymentPopup = true;
+
 
     const purchaseData = {
       name: this.signupData.name,
       email: this.signupData.email,
       phone: this.signupData.phone,
       pricing_popup_id: this.selectedPlan.id,
-      price: this.selectedPlan.price,
+      price: finalPrice, // <-- IMPORTANT: Use the potentially discounted price
+      original_price: this.selectedPlan.original_price ?? finalPrice, // Send original price too if available
       project_name: this.signupData.project_name,
-      project_description: this.signupData.project_description
+      project_description: this.signupData.project_description,
+      referral_source: this.isFacebookReferral ? 'facebook' : null // Optional: Track referral source
     };
 
-    // Create User Purchase (mark as interested, pending payment)
+    this.createdPurchaseData = purchaseData; // Store data before API call
+
+    // Show confirmation *after* storing data, *before* API call for creation
+    this.showConfirmPricePaymentPopup = true;
+
+    // IMPORTANT: Create user purchase entry *before* initiating payment flow
+    // This marks interest even if payment fails/is abandoned.
     this.landingService.createUserPurchase(purchaseData).subscribe({
       next: (response) => {
-        // console.log('User created:', response);
-        this.createdPurchaseId = response.data.id;
-        this.createdPurchaseData = purchaseData;
-
-        // 2. Then show popup
-        this.packageAmount = this.selectedPlan.price;
-        this.selectedPlanTitle = this.selectedPlan.title;
-        // this.showConfirmPricePaymentPopup = true;
-        setTimeout(() => {
-          this.showConfirmPricePaymentPopup = true;
-        }, 2000); // 2000 milliseconds = 3 seconds
-
+        // console.log('User Purchase record created/updated:', response);
+        if (response && response.data && response.data.id) {
+          this.createdPurchaseId = response.data.id; // Store the ID from the response
+          // Now the confirmation popup is already visible, user can proceed to pay
+        } else {
+          this.showErrorSnackbar('Failed to record purchase interest. Please try again.');
+          this.closePriceConfirmPopup(); // Close confirmation if initial recording failed
+        }
       },
-
+      error: (error) => {
+       
+        this.showErrorSnackbar('Error recording purchase interest. Please try again.');
+        this.closePriceConfirmPopup();
+      }
     });
   }
 
+
+  // proceedToSignupPurchasePayment(): void {
+
+  //   if (!this.createdPurchaseId || !this.createdPurchaseData) {
+  //     this.showErrorSnackbar('No purchase data found. Please submit the form again.');
+  //     return;
+  //   }
+
+  //   // 2. Create Razorpay Order
+  //   this.landingService.createRazorpayOrder(this.createdPurchaseData.price).subscribe({
+  //     next: (res) => {
+  //       if (res.status && res.order) {
+  //         this.startRazorpaySignupPayment(res.order, this.createdPurchaseId, this.createdPurchaseData);
+  //       } else {
+  //         this.showErrorSnackbar('Failed to create Razorpay order.');
+  //       }
+  //     },
+  //     error: () => {
+  //       this.showErrorSnackbar('Error creating Razorpay order.');
+  //     }
+  //   });
+  // }
+
+
+  // Ensure correct price is used when creating the Razorpay order
   proceedToSignupPurchasePayment(): void {
+    this.closePriceConfirmPopup(); // Close confirmation popup first
 
     if (!this.createdPurchaseId || !this.createdPurchaseData) {
       this.showErrorSnackbar('No purchase data found. Please submit the form again.');
       return;
     }
 
-    // 2. Create Razorpay Order
-    this.landingService.createRazorpayOrder(this.createdPurchaseData.price).subscribe({
+    // Use the price stored in createdPurchaseData (which has the correct final price)
+    const paymentAmount = this.createdPurchaseData.price;
+    
+
+    this.landingService.createRazorpayOrder(paymentAmount).subscribe({ // <-- Use correct price
       next: (res) => {
         if (res.status && res.order) {
           this.startRazorpaySignupPayment(res.order, this.createdPurchaseId, this.createdPurchaseData);
         } else {
-          this.showErrorSnackbar('Failed to create Razorpay order.');
+          this.showErrorSnackbar(`Failed to create Razorpay order. ${res.message || ''}`);
         }
       },
-      error: () => {
-        this.showErrorSnackbar('Error creating Razorpay order.');
+      error: (err) => {
+        const errorMsg = err?.error?.message || 'Error creating Razorpay order.';
+        this.showErrorSnackbar(errorMsg);
       }
     });
   }
+
 
 
   startRazorpaySignupPayment(order: any, purchaseId: any, data: any): void {
@@ -1671,6 +2161,170 @@ export class LandingPageComponent implements OnInit {
   closePurchaseStatusPopup() {
     this.showPurchaseStatusPopup = false;
   }
+
+
+
+
+
+
+
+
+
+   // --- REVISED fetchVideoSections ---
+   fetchVideoSections(): void {
+    this.landingService.getAllVideoSections().subscribe({
+      next: (res) => {
+        
+        if (res.status && Array.isArray(res.data)) {
+          // Store all active video data from the API
+          this.videoSections = res.data.filter((video: VideoSection) => video.status === 'active');
+         
+          // Filter the videos *after* fetching and *after* detecting language
+          this.updateDisplayableVideos();
+        } else {
+          this.videoSections = [];
+          this.displayableVideoSections = []; // Ensure displayable is also cleared
+        
+        }
+        this.cdr.detectChanges(); // May not be needed here if updateDisplayableVideos calls it
+      },
+      error: (err) => {
+       
+        this.videoSections = [];
+        this.displayableVideoSections = []; // Ensure displayable is also cleared on error
+      }
+    });
+  }
+
+  // --- REVISED detectUserLanguage ---
+  detectUserLanguage(): void {
+    const browserLang = navigator.language || (navigator as any).userLanguage;
+    let newLang: 'en' | 'hi';
+    if (browserLang && browserLang.toLowerCase().startsWith('hi')) {
+      newLang = 'hi';
+    } else {
+      newLang = 'en';
+    }
+
+    if (newLang !== this.userLanguage) { // Only update if language actually changed
+        this.userLanguage = newLang;
+        // console.log('Detected language:', this.userLanguage);
+        this.updateDisplayableVideos(); // Update display list when language changes
+    } else {
+        //  console.log('Language detected, no change:', this.userLanguage);
+         // Optionally call updateDisplayableVideos here too if videoSections might load after language detection
+         if(this.videoSections.length > 0 && this.displayableVideoSections.length === 0){
+            this.updateDisplayableVideos();
+         }
+    }
+  }
+
+
+  // --- REVISED updateDisplayableVideos ---
+  // Filters the main videoSections list based on whether a video has *any*
+  // suitable source (YouTube or File, Language-specific or Fallback) for the current language.
+  updateDisplayableVideos(): void {
+    if (!this.videoSections || this.videoSections.length === 0) {
+      this.displayableVideoSections = [];
+      // console.log('No video sections to process for display filtering.');
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // console.log(`Filtering ${this.videoSections.length} videos for language: ${this.userLanguage}`);
+
+    this.displayableVideoSections = this.videoSections.filter(video => {
+      let hasValidSource = false; // Initialize as boolean
+
+      if (this.userLanguage === 'hi') {
+        // Use !! to explicitly cast the result to boolean
+        hasValidSource = !!(
+            (video.youtube_link_hi && video.youtube_link_hi.trim() !== "") ||
+            (video.video_file_hi && video.video_file_hi.trim() !== "")
+        );
+      } else { // Default to 'en'
+        // Use !! to explicitly cast the result to boolean
+        hasValidSource = !!(
+            (video.youtube_link_en && video.youtube_link_en.trim() !== "") ||
+            (video.video_file_en && video.video_file_en.trim() !== "")
+        );
+      }
+
+      // --- Optional Fallback Logic (ensure it also uses !!) ---
+      // if (!hasValidSource) {
+      //    hasValidSource = !!(
+      //        (video.youtube_link && video.youtube_link.trim() !== "") ||
+      //        (video.video_file && video.video_file.trim() !== "")
+      //    );
+      // }
+      // --- End Optional Fallback Logic ---
+
+
+      // Logging for debugging (optional)
+    //   if (!hasValidSource) {
+    //       console.log(`  -> Video "${video.title}" (ID: ${video.id}) has NO valid source for lang "${this.userLanguage}". Filtering out.`);
+    //   } else {
+    //       console.log(`  -> Video "${video.title}" (ID: ${video.id}) HAS a valid source for lang "${this.userLanguage}". Including.`);
+    //   }
+
+      return hasValidSource; // hasValidSource is now guaranteed to be boolean
+    });
+
+    // console.log(`Displayable videos count for ${this.userLanguage}:`, this.displayableVideoSections.length);
+    // console.log('Final Displayable videos:', JSON.stringify(this.displayableVideoSections.map(v => v.id), null, 2));
+    this.cdr.detectChanges();
+  }
+
+
+  // --- Helper to get the YOUTUBE URL based on language preference ---
+  getYouTubeUrlForLanguage(video: VideoSection): SafeResourceUrl | null {
+    let targetUrl: string | null = null;
+    if (!video) return null;
+
+    if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
+      targetUrl = video.youtube_link_hi;
+    } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
+      targetUrl = video.youtube_link_en;
+    }
+    // --- Optional Fallback ---
+    // Uncomment if you want the generic YouTube link as a fallback
+    // else if (video.youtube_link && video.youtube_link.trim() !== "") {
+    //   targetUrl = video.youtube_link;
+    //   console.log(`  getVideoUrlForLanguage: Using fallback YouTube for "${video.title}"`);
+    // }
+    // --- End Optional Fallback ---
+
+    if (targetUrl) {
+      return this.sanitizeYoutubeUrl(targetUrl);
+    }
+    return null; // No suitable YouTube link found
+  }
+
+  // --- Helper to get the UPLOADED VIDEO FILE PATH based on language preference ---
+  getUploadedVideoFileForLanguage(video: VideoSection): string | null {
+    let targetPath: string | null = null;
+    if (!video) return null;
+
+    if (this.userLanguage === 'hi' && video.video_file_hi && video.video_file_hi.trim() !== "") {
+      targetPath = video.video_file_hi;
+    } else if (this.userLanguage === 'en' && video.video_file_en && video.video_file_en.trim() !== "") {
+      targetPath = video.video_file_en;
+    }
+    // --- Optional Fallback ---
+    // Uncomment if you want the generic video_file as a fallback
+    // else if (video.video_file && video.video_file.trim() !== "") {
+    //   targetPath = video.video_file;
+    //   console.log(`  getUploadedVideoFileForLanguage: Using fallback file for "${video.title}"`);
+    // }
+    // --- End Optional Fallback ---
+
+    if (targetPath) {
+      // Prepend the base URL for uploaded files
+      return this.baseUrl + targetPath;
+    }
+    return null; // No suitable uploaded file found
+  }
+
 
 
 
