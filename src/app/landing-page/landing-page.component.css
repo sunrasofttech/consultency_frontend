@@ -4382,7 +4382,16 @@ html {
   /* Apply only when < 3 videos */
   .video-section-videos.center-content {
     justify-content: center;
-    flex-wrap: wrap;         /* allow wrapping when < 3 */
-    overflow-x: hidden;
+    /* flex-wrap: wrap;        
+    overflow-x: hidden; */
   }
+
+  @media (max-width: 768px) {
+    .video-item-container {
+      flex: 0 0 100%;
+      width: 100%;
+      scroll-snap-align: start;
+    }
+  }
+  
   
