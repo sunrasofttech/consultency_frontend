@@ -317,7 +317,6 @@
 </section> -->
 
 <section class="slider" *ngIf="!showPricingPopup && banners.length > 0">
-    <!-- Add check for banners.length -->
     <!-- Previous Button -->
     <button class="prev" (click)="prevSlide()"
         [disabled]="banners.length < 2">❮</button>
@@ -326,8 +325,7 @@
         <!-- Loop through banners -->
         <ng-container *ngFor="let banner of banners; let i = index">
             <video
-                #videoRef
-                *ngIf="banner.type === 'video'"
+                *ngIf="banner.type === 'video' && banner.file_url"
                 [src]="baseUrl + banner.file_url"
                 class="slider-video"
                 [class.active]="i === currentIndex"
@@ -338,7 +336,19 @@
                 preload="auto">
                 Your browser does not support the video tag.
             </video>
-            <!-- You could add an img tag here with *ngIf="banner.type === 'image'" later -->
+
+            <!-- YouTube Video -->
+            <iframe
+                *ngIf="banner.type === 'video' && banner.youtube_url"
+                [src]="sanitizeUrl(banner.youtube_url)"
+                class="slider-video"
+                [class.active]="i === currentIndex"
+                frameborder="0"
+                controls
+                loop
+                playsinline>
+                Your browser does not support the video tag.
+            </iframe>
         </ng-container>
     </div>
 
@@ -541,60 +551,66 @@
     </div> 
 </section> -->
 
-
-
-
-
-
-
-<!-- Section for the dynamic language video -->
-<section id="video-section" *ngIf="displayableVideoSections.length > 0 && !showPricingPopup">
+<section id="video-section" *ngIf="videoSections.length > 0">
     <h2>Lets See How We Build This.</h2>
-    <div class="video-section-videos" [ngClass]="{
-        'center-content': displayableVideoSections.length > 0 && displayableVideoSections.length < 3
-      }" >
-        <!-- Loop through ONLY displayable video sections -->
-        <div *ngFor="let video of displayableVideoSections" class="video-item-container">
 
-            <!-- Attempt to get YouTube URL first -->
-            <ng-container *ngIf="getYouTubeUrlForLanguage(video) as safeYouTubeUrl; else tryUploadedFile">
+    <!-- Container for the video players -->
+    <div class="video-section-videos" >
+
+        <!-- Loop through each video -->
+        <div *ngFor="let video of videoSections" class="video-item-container">
+
+            <!-- Check if it's a YouTube link -->
+            <ng-container *ngIf="video.youtube_link; else showUploadedVideo">
+                <!-- Display YouTube Embed using iframe -->
                 <iframe
+                    *ngIf="sanitizeYoutubeUrl(video.youtube_link) as safeUrl"
                     class="video-player"
-                    [src]="safeYouTubeUrl"
+                    [src]="safeUrl"
                     [title]="video.title || 'YouTube video player'"
                     frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen>
                 </iframe>
+                <!-- Show if YouTube link is invalid -->
+                <div *ngIf="!sanitizeYoutubeUrl(video.youtube_link)" class="video-placeholder">
+                   Invalid YouTube Link
+                </div>
             </ng-container>
 
-            <ng-template #tryUploadedFile>
-                <!-- If no YouTube URL, try to get uploaded file URL for the language -->
-                <ng-container *ngIf="getUploadedVideoFileForLanguage(video) as uploadedVideoSrc">
+            <!-- If not YouTube, check for an uploaded video file -->
+            <ng-template #showUploadedVideo>
+                <ng-container *ngIf="video.video_file; else noVideoSource">
+                    <!-- Display Uploaded Video using video tag -->
                     <video
                         class="video-player"
                         controls
                         preload="metadata">
-                        <source [src]="uploadedVideoSrc" type="video/mp4" />
+                        <!-- Construct the full URL for the video file -->
+                        <source [src]="baseUrl + video.video_file" type="video/mp4" />
                         Your browser doesn't support HTML5 video.
                     </video>
                 </ng-container>
-                <!-- No placeholder needed: if it's in displayableVideoSections, it has a source -->
             </ng-template>
 
-            <!-- <p class="video-title" *ngIf="video.title">{{ video.title }}</p> -->
+            <!-- If neither YouTube nor uploaded file exists -->
+             <ng-template #noVideoSource>
+                 <!-- <div class="video-placeholder">
+                    No video source for "{{ video.title || 'this item' }}".
+                 </div> -->
+             </ng-template>
+
+             <!-- Display the title below the video -->
+             <!-- <p class="video-title">{{ video.title }}</p> -->
 
         </div> <!-- End video-item-container -->
     </div> <!-- End video-section-videos -->
 </section>
 
-<!-- Message if displayableVideoSections array is empty -->
-<section id="video-section-empty" *ngIf="displayableVideoSections.length === 0 && !pricingLoading && !showPricingPopup">
-    <!-- Check if the *original* list wasn't empty before filtering -->
-    <!-- <p *ngIf="videoSections.length > 0" class="no-videos-message">No videos available in your preferred language at the moment.</p>
-    <p *ngIf="videoSections.length === 0" class="no-videos-message">No videos available at the moment.</p> -->
+<!-- Optional: Show message if no videos loaded/found -->
+<section id="video-section-empty" *ngIf="videoSections.length === 0">
+    <p class="no-videos-message">No videos available at the moment.</p>
 </section>
-
 
 
 <section id="casestudy" *ngIf="!showPricingPopup">

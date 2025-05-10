@@ -4,7 +4,7 @@ import { LandingPageService } from '../services/landing-page.service';
 import { environment } from 'src/environments/environment';
 import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap } from '@angular/router'; // <-- Import 
 
 
@@ -30,19 +30,33 @@ interface DayOption {
 }
 
 // --- Add VideoSection interface (optional but recommended) ---
+// interface VideoSection {
+//   id: number;
+//   title: string;
+//   youtube_link: string | null;
+//   youtube_link_en?: string | null; // <-- ADD English link (make optional with ?)
+//   youtube_link_hi?: string | null; // <-- ADD Hindi link (make optional with ?)
+//   video_file: string | null;
+//   video_file_en?: string | null; // English uploaded file
+//   video_file_hi?: string | null; // Hindi uploaded file
+//   status: 'active' | 'inactive';
+//   sort_order: number;
+//   // Add other fields if needed
+// }
+
+// --- Add VideoSection interface (optional but recommended) ---
 interface VideoSection {
   id: number;
   title: string;
   youtube_link: string | null;
-  youtube_link_en?: string | null; // <-- ADD English link (make optional with ?)
-  youtube_link_hi?: string | null; // <-- ADD Hindi link (make optional with ?)
   video_file: string | null;
-  video_file_en?: string | null; // English uploaded file
-  video_file_hi?: string | null; // Hindi uploaded file
   status: 'active' | 'inactive';
   sort_order: number;
   // Add other fields if needed
 }
+
+
+
 
 declare var Razorpay: any;
 
@@ -68,6 +82,7 @@ export class LandingPageComponent implements OnInit {
 
   // New property for landing page banners
   banners: any[] = [];
+  displayableBanners: any[] = [];
 
   features: any[] = [];
   aboutPageData: any = {};
@@ -192,8 +207,6 @@ export class LandingPageComponent implements OnInit {
   isFacebookReferral: boolean = false;
 
   displayableVideoSections: VideoSection[] = []; // New property
- 
-
 
 
 
@@ -203,13 +216,12 @@ export class LandingPageComponent implements OnInit {
 
 
 
-
   constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer, private route: ActivatedRoute) { }
 
   ngOnInit(): void {
 
     // --- Language Detection ---
-    this.detectUserLanguage();
+    // this.detectUserLanguage();
 
     // --- Facebook Referrer Detection ---
     this.detectFacebookReferral();
@@ -250,43 +262,7 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-  // Modify detectUserLanguage to also update displayable videos
-  // detectUserLanguage(): void {
-  //   const browserLang = navigator.language || (navigator as any).userLanguage;
-  //   if (browserLang && browserLang.toLowerCase().startsWith('hi')) {
-  //     this.userLanguage = 'hi';
-  //   } else {
-  //     this.userLanguage = 'en';
-  //   }
-  //   console.log('Detected language:', this.userLanguage);
-  //   this.updateDisplayableVideos(); // Update when language changes
-  // }
-
-  // // New method to filter videos based on language and availability
-  // updateDisplayableVideos(): void {
-  //   if (!this.videoSections || this.videoSections.length === 0) {
-  //     this.displayableVideoSections = [];
-  //     return;
-  //   }
-  //   this.displayableVideoSections = this.videoSections.filter(video => {
-  //     if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
-  //       return true;
-  //     } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
-  //       return true;
-  //     } else if (video.video_file) { // If it has a self-hosted file, it's displayable
-  //       return true;
-  //     }
-  //     // Optional: Add fallback to generic youtube_link if desired
-  //     // else if (video.youtube_link && video.youtube_link.trim() !== "") {
-  //     //   return true;
-  //     // }
-  //     return false; // Otherwise, don't include it for display
-  //   });
-  //   console.log('Displayable videos for current language:', this.displayableVideoSections);
-  // }
-
-
-
+  
   // --- Facebook Referral Detection Method ---
   detectFacebookReferral(): void {
     this.route.queryParamMap.subscribe(params => {
@@ -306,114 +282,57 @@ export class LandingPageComponent implements OnInit {
     });
   }
 
-  // // --- Method to apply discount based on Facebook referral and language ---
-  // applyFacebookDiscount(): void {
-  //   console.log('Attempting to apply Facebook discount. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
-
-  //   this.pricingPlans = this.pricingPlans.map((plan: any) => { // Ensure 'plan' has a type, 'any' or a specific interface
-  //     // Make sure all price fields from API are numbers
-  //     const standardPrice = parseFloat(plan.price);
-  //     const fbPriceEn = plan.facebook_price_en !== null && plan.facebook_price_en !== undefined ? parseFloat(plan.facebook_price_en) : null;
-  //     const fbPriceHi = plan.facebook_price_hi !== null && plan.facebook_price_hi !== undefined ? parseFloat(plan.facebook_price_hi) : null;
-
-  //     let finalPrice = standardPrice; // Default to standard price
-  //     let isActuallyDiscounted = false;
-  //     const originalDisplayPrice = standardPrice; // This is the price before any FB logic
-
-  //     if (this.isFacebookReferral) {
-  //       console.log(`Plan ${plan.id}: Is Facebook referral. Checking prices...`);
-  //       console.log(`   Standard Price: ${standardPrice}`);
-  //       console.log(`   FB Price EN: ${fbPriceEn}`);
-  //       console.log(`   FB Price HI: ${fbPriceHi}`);
-
-  //       // --- STEP 1: Prioritize facebook_price_hi if from Facebook (as per your latest request) ---
-  //       if (fbPriceHi !== null && !isNaN(fbPriceHi)) {
-  //         finalPrice = fbPriceHi;
-  //         isActuallyDiscounted = finalPrice < standardPrice;
-  //         console.log(`   Using facebook_price_hi: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
-  //       }
-  //       // --- STEP 2: (LATER) Add language condition here: ---
-  //       // else if (this.userLanguage === 'en' && fbPriceEn !== null && !isNaN(fbPriceEn)) {
-  //       //   finalPrice = fbPriceEn;
-  //       //   isActuallyDiscounted = finalPrice < standardPrice;
-  //       //   console.log(`   User lang EN, using facebook_price_en: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
-  //       // }
-  //       else {
-  //           // If not Hindi FB price, and (later) not English FB price,
-  //           // or if FB prices are not valid numbers, it means no specific FB discount applies for this plan/language.
-  //           // The finalPrice remains the standardPrice.
-  //           // We still mark original_price for consistency if it was a FB referral.
-  //           console.log(`   No applicable Facebook price for this language/plan. Using standard price: ${finalPrice}`);
-  //       }
-  //     } else {
-  //       console.log(`Plan ${plan.id}: Not a Facebook referral. Using standard price.`);
-  //       // finalPrice is already standardPrice, isActuallyDiscounted is false
-  //     }
-
-  //     return {
-  //       ...plan, // Spread the original plan
-  //       price: finalPrice,                 // The price to be displayed and used for payment
-  //       original_price: originalDisplayPrice, // The standard price before any FB-specific logic
-  //       is_discounted: isActuallyDiscounted  // True if finalPrice is lower than originalDisplayPrice
-  //     };
-  //   });
-
-  //   console.log('Pricing Plans AFTER applyFacebookDiscount:', JSON.stringify(this.pricingPlans, null, 2));
-  //   this.cdr.detectChanges(); // Notify Angular of the changes
-  // }
-
-
-
-    // --- *** REVISED applyFacebookDiscount *** ---
-    applyFacebookDiscount(): void {
-      // console.log('Applying discount logic. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
   
-      this.pricingPlans = this.pricingPlans.map((plan: any) => {
-        // Ensure prices are numbers
-        const standardPrice = parseFloat(plan.price);
-        const fbPriceEn = plan.facebook_price_en !== null && plan.facebook_price_en !== undefined ? parseFloat(plan.facebook_price_en) : null;
-        const fbPriceHi = plan.facebook_price_hi !== null && plan.facebook_price_hi !== undefined ? parseFloat(plan.facebook_price_hi) : null;
-  
-        let finalPrice = standardPrice;
-        let isActuallyDiscounted = false;
-        const originalDisplayPrice = standardPrice; // Base price before FB logic
-  
-        if (this.isFacebookReferral) {
-          // console.log(`Plan ${plan.id}: Is FB referral. Lang: ${this.userLanguage}`);
-  
-          if (this.userLanguage === 'hi' && fbPriceHi !== null && !isNaN(fbPriceHi)) {
-            finalPrice = fbPriceHi;
-            isActuallyDiscounted = finalPrice < standardPrice;
-            // console.log(` -> Using FB Hindi price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
-          } else if (this.userLanguage === 'en' && fbPriceEn !== null && !isNaN(fbPriceEn)) {
-            finalPrice = fbPriceEn;
-            isActuallyDiscounted = finalPrice < standardPrice;
-            // console.log(` -> Using FB English price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
-          } else {
-            // From FB, but no specific valid price for this language, use standard
-            finalPrice = standardPrice;
-            isActuallyDiscounted = false; // Not discounted compared to standard
-            // console.log(` -> No specific FB price for lang ${this.userLanguage}. Using standard price: ${finalPrice}`);
-          }
+  // --- *** REVISED applyFacebookDiscount *** ---
+  applyFacebookDiscount(): void {
+    // console.log('Applying discount logic. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
+
+    this.pricingPlans = this.pricingPlans.map((plan: any) => {
+      // Ensure prices are numbers
+      const standardPrice = parseFloat(plan.price);
+      const fbPriceEn = plan.facebook_price_en !== null && plan.facebook_price_en !== undefined ? parseFloat(plan.facebook_price_en) : null;
+      const fbPriceHi = plan.facebook_price_hi !== null && plan.facebook_price_hi !== undefined ? parseFloat(plan.facebook_price_hi) : null;
+
+      let finalPrice = standardPrice;
+      let isActuallyDiscounted = false;
+      const originalDisplayPrice = standardPrice; // Base price before FB logic
+
+      if (this.isFacebookReferral) {
+        // console.log(`Plan ${plan.id}: Is FB referral. Lang: ${this.userLanguage}`);
+
+        if (this.userLanguage === 'hi' && fbPriceHi !== null && !isNaN(fbPriceHi)) {
+          finalPrice = fbPriceHi;
+          isActuallyDiscounted = finalPrice < standardPrice;
+          // console.log(` -> Using FB Hindi price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
+        } else if (this.userLanguage === 'en' && fbPriceEn !== null && !isNaN(fbPriceEn)) {
+          finalPrice = fbPriceEn;
+          isActuallyDiscounted = finalPrice < standardPrice;
+          // console.log(` -> Using FB English price: ${finalPrice}. Discounted: ${isActuallyDiscounted}`);
         } else {
-          // Not from FB, use standard price
+          // From FB, but no specific valid price for this language, use standard
           finalPrice = standardPrice;
-          isActuallyDiscounted = false;
-          //  console.log(`Plan ${plan.id}: Not FB referral. Using standard price: ${finalPrice}`);
+          isActuallyDiscounted = false; // Not discounted compared to standard
+          // console.log(` -> No specific FB price for lang ${this.userLanguage}. Using standard price: ${finalPrice}`);
         }
-  
-        return {
-          ...plan,
-          price: finalPrice,
-          original_price: originalDisplayPrice, // Store the standard price for display if discounted
-          is_discounted: isActuallyDiscounted
-        };
-      });
-  
-      // console.log('Pricing Plans AFTER discount logic:', JSON.stringify(this.pricingPlans, null, 2));
-      this.cdr.detectChanges();
-    }
-  
+      } else {
+        // Not from FB, use standard price
+        finalPrice = standardPrice;
+        isActuallyDiscounted = false;
+        //  console.log(`Plan ${plan.id}: Not FB referral. Using standard price: ${finalPrice}`);
+      }
+
+      return {
+        ...plan,
+        price: finalPrice,
+        original_price: originalDisplayPrice, // Store the standard price for display if discounted
+        is_discounted: isActuallyDiscounted
+      };
+    });
+
+    // console.log('Pricing Plans AFTER discount logic:', JSON.stringify(this.pricingPlans, null, 2));
+    this.cdr.detectChanges();
+  }
+
   toggleAnswer(index: number): void {
     this.expandedIndex = this.expandedIndex === index ? null : index;
   }
@@ -524,53 +443,7 @@ export class LandingPageComponent implements OnInit {
     // console.log('Selected time:', this.time); 
   }
 
-  // loadAvailableTimesForDate(date: string): void {
-  //   // Simulate available time slots per date
-  //   this.availableTimes = ['10:30 AM', '11:30 AM', '1:00 PM', '2:30 PM', '4:00 PM']
-  //     .filter(() => Math.random() > 0.3); // randomly reduce slots
-  // }
-
-
-
-  // loadAvailableTimesForDate(date: string): void {
-  //   // Call the service to get booked slots for the selected date
-  //   this.landingService.getBookedSlots(date).subscribe({
-  //     next: (res) => {
-  //       if (res.status) {
-  //         this.bookedTimes = res.bookedTimes;
-  //         this.availableTimes = res.remainingTimes;
-  //         // // Remove booked times from the available times
-  //         // this.availableTimes = this.availableTimes.filter(time => !this.bookedTimes.includes(this.convertTo24HourFormat(time)));
-  //          // Filter available times
-  //       const finalAvailableTimes = this.availableTimes.filter(time =>
-  //         !this.bookedTimes.includes(this.convertTo24HourFormat(time))
-  //       );
-
-  //       // Update the selected day's slot text
-  //       this.days = this.days.map(day => {
-  //         if (day.day.toString() === date) {
-  //           const slotCount = finalAvailableTimes.length;
-  //           const isAvailable = slotCount > 0;
-
-  //           return {
-  //             ...day,
-  //             available: isAvailable,
-  //             slotsText: isAvailable ? `${slotCount} slot${slotCount > 1 ? 's' : ''}` : '—',
-  //             slotsClass: isAvailable ? 'green' : 'gray'
-  //           };
-  //         }
-  //         return day;
-  //       });
-
-  //       } else {
-  //         console.error('Failed to fetch booked slots');
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Error fetching booked slots:', err);
-  //     }
-  //   });
-  // }
+  
 
   closeFinalStatusPopup(): void {
     this.showFinalStatusPopup = false;
@@ -652,17 +525,6 @@ export class LandingPageComponent implements OnInit {
     return `${newHour.toString().padStart(2, '0')}:${minute}`;
   }
 
-
-  // selectDay(day: number): void {
-  //   const selected = this.days.find(d => d.day === day);
-  //   if (selected?.available) {
-  //     this.selectedDay = day;
-  //   }
-  // }
-
-  // selectTime(time: string): void {
-  //   this.selectedTime = time;
-  // }
 
   closePopup() {
     // console.log("time popup")
@@ -864,39 +726,6 @@ export class LandingPageComponent implements OnInit {
 
 
 
-  // createBooking(bookingData: any): void {
-  //   this.bookingLoading = true;
-  //   // this.showDateTimePopup = false;
-  //   this.isLoaderOpen();
-
-  //   this.landingService.createBooking(bookingData).subscribe({
-  //     next: (res) => {
-  //       this.isLoaderClose() // Stop loader
-  //       this.bookingLoading = false;
-  //       if (res.status) {
-  //         this.bookingSuccess = 'Booking successful!';
-
-  //         this.closePopup();
-  //         // this.openFinalPopup()
-  //         setTimeout(() => this.openFinalPopup(), 200);
-
-  //         this.resetAll();
-  //         // setTimeout(() => this.closeDateTimePopup(), 100);
-  //       } else {
-  //         this.bookingSuccessFlag = false;
-  //         this.showFinalStatusPopup = true; // Show popup on error
-  //         this.bookingError = 'Booking failed. Try again.';
-  //       }
-  //     },
-  //     error: (err) => {
-  //       this.bookingLoading = false;
-  //       this.bookingError = 'Something went wrong.';
-  //       console.error(err);
-  //     }
-  //   });
-  // }
-
-
   createBooking(bookingData: any): void {
     this.bookingLoading = true;
     this.isLoaderOpen(); // Show loader
@@ -980,11 +809,29 @@ export class LandingPageComponent implements OnInit {
 
     this.showConfirmPaymentPopup = true;
 
+    // Get the current URL path to determine the language (if any)
+    const path = window.location.pathname;
 
     this.landingService.getSubscriptionAmount().subscribe({
       next: (res) => {
         // console.log("Subscription Amount:", res);
-        this.amount = res.data[0].amount;
+        // this.amount = res.data[0].amount;
+        // this.pendingBookingData.amount = this.amount;
+
+        const plan = res.data[0]; // Assuming only one subscription plan is returned
+
+        if (path.startsWith('/en')) {
+          // For English language path
+          this.amount = plan.amount_en;
+        } else if (path.startsWith('/hi')) {
+          // For Hindi language path
+          this.amount = plan.amount_hi;
+        } else {
+          // Default case: for root path
+          this.amount = plan.amount;
+        }
+
+        // Assign the selected amount to the booking data
         this.pendingBookingData.amount = this.amount;
       },
       error: (err) => {
@@ -1094,21 +941,49 @@ export class LandingPageComponent implements OnInit {
       : words.slice(mid).join(' ');
   }
 
-  // New method to fetch and set banners
+ 
   fetchLandingPageBanners(): void {
     this.landingService.getLandingPageBanners().subscribe({
       next: (res) => {
         if (res.status && res.data?.length > 0) {
-          this.banners = res.data; // Store the banners data
-          // console.log('Landing page banners:', this.banners);
+          const path = window.location.pathname;
+
+          if (path.startsWith('/en')) {
+            this.banners = res.data.filter((b: any) =>
+              b.status === 'active' && b.lang_type === 'en'
+            );
+          } else if (path.startsWith('/hi')) {
+            this.banners = res.data.filter((b: any) =>
+              b.status === 'active' && b.lang_type === 'hi'
+            );
+          } else {
+            // Default case: show all active banners (for root path)
+            this.banners = res.data.filter((b: any) =>
+              b.status === 'active'
+            );
+          }
+
+          console.log('Filtered banners:', this.banners);
         }
       },
       error: (err) => {
-        // console.error('Error fetching landing page banners', err);
+        console.error('Error fetching landing page banners', err);
       }
     });
   }
 
+  // Method to sanitize YouTube URL
+  sanitizeUrl(url: string): SafeUrl {
+    const videoId = this.extractYouTubeVideoId(url);
+    const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  // Extract YouTube Video ID from the URL
+  extractYouTubeVideoId(url: string): string | null {
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/[^\/]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  }
 
 
   /**
@@ -1298,188 +1173,6 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-  // Method to fetch videos from your service
-  // fetchVideoSections(): void {
-  //   this.landingService.getAllVideoSections().subscribe({
-  //     next: (res) => {
-  //       if (res.status && Array.isArray(res.data)) {
-  //         this.videoSections = res.data;
-  //       } else {
-  //         this.videoSections = [];
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Error fetching video sections:', err);
-  //       this.videoSections = [];
-  //     }
-  //   });
-  // }
-
-  // Modified fetchVideoSections to handle language AND optional links
-  // fetchVideoSections(): void {
-  //   this.landingService.getAllVideoSections().subscribe({
-  //     next: (res) => {
-  //       if (res.status && Array.isArray(res.data) && res.data.length > 0) {
-  //         const firstVideoData = res.data[0] as VideoSection; // Use the updated interface
-
-  //         let targetUrl: string | null = null;
-
-  //         // Prioritize language-specific link if available
-  //         if (this.userLanguage === 'hi' && firstVideoData.youtube_link_hi) {
-  //           targetUrl = firstVideoData.youtube_link_hi;
-  //           console.log('Using Hindi YouTube link:', targetUrl);
-  //         } else if (firstVideoData.youtube_link_en) { // Check for English link next
-  //           targetUrl = firstVideoData.youtube_link_en;
-  //           console.log('Using English YouTube link:', targetUrl);
-  //         } else {
-  //           // Fallback to the original 'youtube_link' if no language-specific ones found
-  //           targetUrl = firstVideoData.youtube_link;
-  //           console.log('Using default/fallback YouTube link:', targetUrl);
-  //         }
-
-  //         this.displayVideoUrl = this.sanitizeYoutubeUrl(targetUrl);
-
-  //       } else {
-  //         this.videoSections = [];
-  //         this.displayVideoUrl = null;
-  //         console.log('No suitable video data found or API error.');
-  //       }
-  //       this.cdr.detectChanges();
-  //     },
-  //     error: (err) => {
-  //       console.error('Error fetching video sections:', err);
-  //       this.videoSections = [];
-  //       this.displayVideoUrl = null;
-  //     }
-  //   });
-  // }
-
-
-
-
-  // fetchVideoSections(): void {
-  //   this.landingService.getAllVideoSections().subscribe({
-  //     next: (res) => {
-  //       if (res.status && Array.isArray(res.data)) {
-  //         this.videoSections = res.data.filter((video: VideoSection) => video.status === 'active');
-  //         this.updateDisplayableVideos(); // Call new method to filter
-  //       } else {
-  //         this.videoSections = [];
-  //         this.displayableVideoSections = [];
-  //       }
-  //       this.cdr.detectChanges();
-  //     },
-  //     error: (err) => { /* ... */ }
-  //   });
-  // }
-
-
-  // getVideoUrlForLanguage remains mostly the same, but it assumes the video passed to it IS displayable
-  getVideoUrlForLanguage(video: VideoSection): SafeResourceUrl | null {
-    let targetUrl: string | null = null;
-    if (!video) return null;
-
-    if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
-      targetUrl = video.youtube_link_hi;
-    } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
-      targetUrl = video.youtube_link_en;
-    } else if (video.youtube_link && video.youtube_link.trim() !== "") { // Fallback if added in updateDisplayableVideos
-       targetUrl = video.youtube_link;
-    }
-    // No need to check video.video_file here as this function is for YouTube URLs
-
-    if (targetUrl) {
-      return this.sanitizeYoutubeUrl(targetUrl);
-    }
-    return null;
-  }
-
-
-
-  getDisplayableVideos(): VideoSection[] {
-    if (!this.videoSections || this.videoSections.length === 0) {
-      return [];
-    }
-    return this.videoSections.filter(video => {
-      // Check if there's a YouTube URL for the current language
-      if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") return true;
-      if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") return true;
-      // Or if there's an uploaded video file (assuming uploaded files are language-agnostic or you handle that differently)
-      if (video.video_file) return true;
-      // Or if you want to use the fallback youtube_link when specific lang version is missing
-      // if (video.youtube_link && video.youtube_link.trim() !== "") return true; 
-      return false;
-    });
-  }
-
-
-
-  // Keep sanitizeYoutubeUrl and extractYoutubeVideoId as they are
-  sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
-    if (!url) return null;
-    const videoId = this.extractYoutubeVideoId(url);
-    if (!videoId) {
-      // console.warn('Could not extract YouTube video ID from:', url);
-      return null; // Invalid YouTube URL
-    }
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`; // Added autoplay, mute, loop
-    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
-  }
-
-  extractYoutubeVideoId(url: string): string | null {
-    // ...(keep existing implementation)...
-    if (!url) return null;
-    const patterns = [
-      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    // console.warn('Could not match YouTube ID pattern for:', url);
-    return null; // No ID found
-  }
-
-
-
-
-
-  // Helper to securely create YouTube embed URLs for iframes
-  // sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
-  //   if (!url) return null;
-  //   const videoId = this.extractYoutubeVideoId(url);
-  //   if (!videoId) return null; // Invalid YouTube URL
-  //   const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-  //   // Tell Angular this URL is safe to use in an iframe
-  //   return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
-  // }
-
-  // Helper to get the ID from various YouTube URL formats
-  // extractYoutubeVideoId(url: string): string | null {
-  //   if (!url) return null;
-  //   // Regex simplified - look for standard patterns
-  //   const patterns = [
-  //     /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-  //     /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-  //     /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-  //     /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
-  //   ];
-  //   for (const pattern of patterns) {
-  //     const match = url.match(pattern);
-  //     if (match && match[1]) {
-  //       return match[1];
-  //     }
-  //   }
-  //   return null; // No ID found
-  // }
-
-
-
   // +++ ADD Placeholder for Popup Logic +++
   openVideoPopup(videoId: number): void {
     // console.log('Open popup requested for video ID:', videoId);
@@ -1510,21 +1203,6 @@ export class LandingPageComponent implements OnInit {
       // console.error('Video not found for ID:', videoId);
     }
   }
-
-
-  // fetchAllProcessSteps(): void {
-  //   this.landingService.getAllProcessSteps().subscribe({
-  //     next: (res) => {
-  //       if (res.status && res.data?.length > 0) {
-  //         this.processSteps = res.data;
-  //         console.log('Process Steps:', this.processSteps);
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Error fetching process steps', err);
-  //     }
-  //   });
-  // }
 
 
   fetchAllProcessSteps(): void {
@@ -2032,7 +1710,7 @@ export class LandingPageComponent implements OnInit {
         }
       },
       error: (error) => {
-       
+
         this.showErrorSnackbar('Error recording purchase interest. Please try again.');
         this.closePriceConfirmPopup();
       }
@@ -2074,7 +1752,7 @@ export class LandingPageComponent implements OnInit {
 
     // Use the price stored in createdPurchaseData (which has the correct final price)
     const paymentAmount = this.createdPurchaseData.price;
-    
+
 
     this.landingService.createRazorpayOrder(paymentAmount).subscribe({ // <-- Use correct price
       next: (res) => {
@@ -2163,175 +1841,51 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-
-
-
-
-
-
-
-   // --- REVISED fetchVideoSections ---
-   fetchVideoSections(): void {
+  // Method to fetch videos from your service
+  fetchVideoSections(): void {
     this.landingService.getAllVideoSections().subscribe({
       next: (res) => {
-        
         if (res.status && Array.isArray(res.data)) {
-          // Store all active video data from the API
-          this.videoSections = res.data.filter((video: VideoSection) => video.status === 'active');
-         
-          // Filter the videos *after* fetching and *after* detecting language
-          this.updateDisplayableVideos();
+          this.videoSections = res.data;
         } else {
           this.videoSections = [];
-          this.displayableVideoSections = []; // Ensure displayable is also cleared
-        
         }
-        this.cdr.detectChanges(); // May not be needed here if updateDisplayableVideos calls it
       },
       error: (err) => {
-       
+        console.error('Error fetching video sections:', err);
         this.videoSections = [];
-        this.displayableVideoSections = []; // Ensure displayable is also cleared on error
       }
     });
   }
 
-  // --- REVISED detectUserLanguage ---
-  detectUserLanguage(): void {
-    const browserLang = navigator.language || (navigator as any).userLanguage;
-    let newLang: 'en' | 'hi';
-    if (browserLang && browserLang.toLowerCase().startsWith('hi')) {
-      newLang = 'hi';
-    } else {
-      newLang = 'en';
-    }
-
-    if (newLang !== this.userLanguage) { // Only update if language actually changed
-        this.userLanguage = newLang;
-        // console.log('Detected language:', this.userLanguage);
-        this.updateDisplayableVideos(); // Update display list when language changes
-    } else {
-        //  console.log('Language detected, no change:', this.userLanguage);
-         // Optionally call updateDisplayableVideos here too if videoSections might load after language detection
-         if(this.videoSections.length > 0 && this.displayableVideoSections.length === 0){
-            this.updateDisplayableVideos();
-         }
-    }
+  // Helper to securely create YouTube embed URLs for iframes
+  sanitizeYoutubeUrl(url: string | null): SafeResourceUrl | null {
+    if (!url) return null;
+    const videoId = this.extractYoutubeVideoId(url);
+    if (!videoId) return null; // Invalid YouTube URL
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    // Tell Angular this URL is safe to use in an iframe
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 
-
-  // --- REVISED updateDisplayableVideos ---
-  // Filters the main videoSections list based on whether a video has *any*
-  // suitable source (YouTube or File, Language-specific or Fallback) for the current language.
-  updateDisplayableVideos(): void {
-    if (!this.videoSections || this.videoSections.length === 0) {
-      this.displayableVideoSections = [];
-      // console.log('No video sections to process for display filtering.');
-      this.cdr.detectChanges();
-      return;
-    }
-
-    // console.log(`Filtering ${this.videoSections.length} videos for language: ${this.userLanguage}`);
-
-    this.displayableVideoSections = this.videoSections.filter(video => {
-      let hasValidSource = false; // Initialize as boolean
-
-      if (this.userLanguage === 'hi') {
-        // Use !! to explicitly cast the result to boolean
-        hasValidSource = !!(
-            (video.youtube_link_hi && video.youtube_link_hi.trim() !== "") ||
-            (video.video_file_hi && video.video_file_hi.trim() !== "")
-        );
-      } else { // Default to 'en'
-        // Use !! to explicitly cast the result to boolean
-        hasValidSource = !!(
-            (video.youtube_link_en && video.youtube_link_en.trim() !== "") ||
-            (video.video_file_en && video.video_file_en.trim() !== "")
-        );
-      }
-
-      // --- Optional Fallback Logic (ensure it also uses !!) ---
-      // if (!hasValidSource) {
-      //    hasValidSource = !!(
-      //        (video.youtube_link && video.youtube_link.trim() !== "") ||
-      //        (video.video_file && video.video_file.trim() !== "")
-      //    );
-      // }
-      // --- End Optional Fallback Logic ---
-
-
-      // Logging for debugging (optional)
-    //   if (!hasValidSource) {
-    //       console.log(`  -> Video "${video.title}" (ID: ${video.id}) has NO valid source for lang "${this.userLanguage}". Filtering out.`);
-    //   } else {
-    //       console.log(`  -> Video "${video.title}" (ID: ${video.id}) HAS a valid source for lang "${this.userLanguage}". Including.`);
-    //   }
-
-      return hasValidSource; // hasValidSource is now guaranteed to be boolean
-    });
-
-    // console.log(`Displayable videos count for ${this.userLanguage}:`, this.displayableVideoSections.length);
-    // console.log('Final Displayable videos:', JSON.stringify(this.displayableVideoSections.map(v => v.id), null, 2));
-    this.cdr.detectChanges();
-  }
-
-
-  // --- Helper to get the YOUTUBE URL based on language preference ---
-  getYouTubeUrlForLanguage(video: VideoSection): SafeResourceUrl | null {
-    let targetUrl: string | null = null;
-    if (!video) return null;
-
-    if (this.userLanguage === 'hi' && video.youtube_link_hi && video.youtube_link_hi.trim() !== "") {
-      targetUrl = video.youtube_link_hi;
-    } else if (this.userLanguage === 'en' && video.youtube_link_en && video.youtube_link_en.trim() !== "") {
-      targetUrl = video.youtube_link_en;
-    }
-    // --- Optional Fallback ---
-    // Uncomment if you want the generic YouTube link as a fallback
-    // else if (video.youtube_link && video.youtube_link.trim() !== "") {
-    //   targetUrl = video.youtube_link;
-    //   console.log(`  getVideoUrlForLanguage: Using fallback YouTube for "${video.title}"`);
-    // }
-    // --- End Optional Fallback ---
-
-    if (targetUrl) {
-      return this.sanitizeYoutubeUrl(targetUrl);
-    }
-    return null; // No suitable YouTube link found
-  }
-
-  // --- Helper to get the UPLOADED VIDEO FILE PATH based on language preference ---
-  getUploadedVideoFileForLanguage(video: VideoSection): string | null {
-    let targetPath: string | null = null;
-    if (!video) return null;
-
-    if (this.userLanguage === 'hi' && video.video_file_hi && video.video_file_hi.trim() !== "") {
-      targetPath = video.video_file_hi;
-    } else if (this.userLanguage === 'en' && video.video_file_en && video.video_file_en.trim() !== "") {
-      targetPath = video.video_file_en;
-    }
-    // --- Optional Fallback ---
-    // Uncomment if you want the generic video_file as a fallback
-    // else if (video.video_file && video.video_file.trim() !== "") {
-    //   targetPath = video.video_file;
-    //   console.log(`  getUploadedVideoFileForLanguage: Using fallback file for "${video.title}"`);
-    // }
-    // --- End Optional Fallback ---
-
-    if (targetPath) {
-      // Prepend the base URL for uploaded files
-      return this.baseUrl + targetPath;
-    }
-    return null; // No suitable uploaded file found
-  }
-
-
-
-
-
-
-
-
+  // Helper to get the ID from various YouTube URL formats
+  extractYoutubeVideoId(url: string): string | null {
+     if (!url) return null;
+     // Regex simplified - look for standard patterns
+     const patterns = [
+       /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+       /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+       /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+       /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+     ];
+     for (const pattern of patterns) {
+       const match = url.match(pattern);
+       if (match && match[1]) {
+         return match[1];
+       }
+     }
+     return null; // No ID found
+   }
 
 
 }
