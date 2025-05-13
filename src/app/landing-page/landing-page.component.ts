@@ -1669,7 +1669,7 @@ export class LandingPageComponent implements OnInit {
       return;
     }
     if (!this.signupData.name || !this.signupData.email || !this.signupData.phone || !this.signupData.project_name || !this.signupData.project_description) {
-      alert("Please fill all required fields.");
+      // alert("Please fill all required fields.");
       return;
     }
 
@@ -1694,7 +1694,7 @@ export class LandingPageComponent implements OnInit {
     this.createdPurchaseData = purchaseData; // Store data before API call
 
     // Show confirmation *after* storing data, *before* API call for creation
-    this.showConfirmPricePaymentPopup = true;
+    // this.showConfirmPricePaymentPopup = true;
 
     // IMPORTANT: Create user purchase entry *before* initiating payment flow
     // This marks interest even if payment fails/is abandoned.
@@ -1703,6 +1703,7 @@ export class LandingPageComponent implements OnInit {
         // console.log('User Purchase record created/updated:', response);
         if (response && response.data && response.data.id) {
           this.createdPurchaseId = response.data.id; // Store the ID from the response
+           this.showConfirmPricePaymentPopup = true; // <<<< THIS LINE IS MOVED HERE
           // Now the confirmation popup is already visible, user can proceed to pay
         } else {
           this.showErrorSnackbar('Failed to record purchase interest. Please try again.');
