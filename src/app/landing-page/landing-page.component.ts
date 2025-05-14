@@ -173,6 +173,8 @@ export class LandingPageComponent implements OnInit {
   pricingLoading: boolean = false;
   pricingError: string | null = null;
 
+  isSignupSubmitting: boolean = false;
+
 
   showSignupForm: boolean = false;
   signupData = {
@@ -262,7 +264,7 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-  
+
   // --- Facebook Referral Detection Method ---
   detectFacebookReferral(): void {
     this.route.queryParamMap.subscribe(params => {
@@ -282,7 +284,7 @@ export class LandingPageComponent implements OnInit {
     });
   }
 
-  
+
   // --- *** REVISED applyFacebookDiscount *** ---
   applyFacebookDiscount(): void {
     // console.log('Applying discount logic. isFacebookReferral:', this.isFacebookReferral, 'userLanguage:', this.userLanguage);
@@ -443,7 +445,7 @@ export class LandingPageComponent implements OnInit {
     // console.log('Selected time:', this.time); 
   }
 
-  
+
 
   closeFinalStatusPopup(): void {
     this.showFinalStatusPopup = false;
@@ -941,7 +943,7 @@ export class LandingPageComponent implements OnInit {
       : words.slice(mid).join(' ');
   }
 
- 
+
   fetchLandingPageBanners(): void {
     this.landingService.getLandingPageBanners().subscribe({
       next: (res) => {
@@ -1582,6 +1584,15 @@ export class LandingPageComponent implements OnInit {
     this.selectedPlan = null; // Clear selected plan when closing signup (optional)
     // Reset signup form fields if needed
     // this.signupData = { name: '', email: '', password: '' };
+    // Reset signup form fields when closing
+    this.signupData = {
+      name: '',
+      email: '',
+      phone: '',
+      project_name: '',
+      project_description: ''
+    };
+    this.isSignupSubmitting = false; // <<< RESET LOADER STATE if form is 
   }
 
   // submitSignupForm(): void {
@@ -1673,6 +1684,8 @@ export class LandingPageComponent implements OnInit {
       return;
     }
 
+    this.isSignupSubmitting = true; // <<< START LOADER
+
     // Use the price from the selectedPlan (which might be discounted)
     const finalPrice = this.selectedPlan.price;
     this.packageAmount = finalPrice; // Update confirmation amount
@@ -1701,11 +1714,23 @@ export class LandingPageComponent implements OnInit {
     this.landingService.createUserPurchase(purchaseData).subscribe({
       next: (response) => {
         // console.log('User Purchase record created/updated:', response);
+        this.isSignupSubmitting = false; // <<< STOP LOADER
         if (response && response.data && response.data.id) {
           this.createdPurchaseId = response.data.id; // Store the ID from the response
-           this.showConfirmPricePaymentPopup = true; // <<<< THIS LINE IS MOVED HERE
+          this.showConfirmPricePaymentPopup = true; // <<<< THIS LINE IS MOVED HERE
           // Now the confirmation popup is already visible, user can proceed to pay
+
+          // Clear form data on successful API call
+          this.signupData = {
+            name: '',
+            email: '',
+            phone: '',
+            project_name: '',
+            project_description: ''
+          };
+
         } else {
+          this.isSignupSubmitting = false; // <<< STOP LOADER
           this.showErrorSnackbar('Failed to record purchase interest. Please try again.');
           this.closePriceConfirmPopup(); // Close confirmation if initial recording failed
         }
@@ -1871,22 +1896,22 @@ export class LandingPageComponent implements OnInit {
 
   // Helper to get the ID from various YouTube URL formats
   extractYoutubeVideoId(url: string): string | null {
-     if (!url) return null;
-     // Regex simplified - look for standard patterns
-     const patterns = [
-       /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-       /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-       /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-       /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
-     ];
-     for (const pattern of patterns) {
-       const match = url.match(pattern);
-       if (match && match[1]) {
-         return match[1];
-       }
-     }
-     return null; // No ID found
-   }
+    if (!url) return null;
+    // Regex simplified - look for standard patterns
+    const patterns = [
+      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null; // No ID found
+  }
 
 
 }

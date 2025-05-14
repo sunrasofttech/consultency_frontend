@@ -4394,4 +4394,29 @@ html {
     }
   }
   
-  
+  /* Add to your landing-page.component.css or global styles.css */
+.spinner-border-sm {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: -0.125em;
+  border: .2em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  -webkit-animation: .75s linear infinite spinner-border;
+  animation: .75s linear infinite spinner-border;
+  margin-right: 0.5em; /* Add some space between spinner and text */
+}
+
+@-webkit-keyframes spinner-border {
+  to { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+
+/* Ensure button text aligns well with spinner */
+.btn-primary .spinner-border-sm + span {
+  vertical-align: middle;
+}
