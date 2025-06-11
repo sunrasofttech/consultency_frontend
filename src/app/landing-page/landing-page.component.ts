@@ -210,6 +210,7 @@ export class LandingPageComponent implements OnInit {
 
   displayableVideoSections: VideoSection[] = []; // New property
 
+  showFillFormPopup: boolean = false;
 
 
   @ViewChild('daysWrapper') daysWrapper!: ElementRef;
@@ -258,7 +259,9 @@ export class LandingPageComponent implements OnInit {
 
     // Optional: Update on resize too
     window.addEventListener('resize', () => {
-      this.isMobile = window.innerWidth <= 600;
+      // this.isMobile = window.innerWidth <= 600;
+      this.isMobile = window.innerWidth <= 768;
+
     });
     this.isMobile = window.innerWidth <= 480;
   }
@@ -549,11 +552,26 @@ export class LandingPageComponent implements OnInit {
     }
   }
 
+   // ADD THIS NEW METHOD TO CLOSE THE POPUP
+  closeFillFormPopup(): void {
+    this.showFillFormPopup = false;
+  }
+
 
   openDateTimePopup(): void {
     this.bookingError = '';
+
+ // ================== START: ADD VALIDATION LOGIC HERE ==================
+    if (!this.name.trim() || !this.email.trim() || !this.phone.trim()) {
+      // If any of the required fields are empty (after trimming whitespace)
+      this.showFillFormPopup = true; // Show the new "fill form" popup
+      return; // Stop the rest of the function from executing
+    }
+    // ================== END: ADD VALIDATION LOGIC HERE ==================
+
     if (!this.name || !this.email || !this.phone) {
       this.bookingError = 'Please fill name and email before booking.';
+      this.showErrorSnackbar(this.bookingError);
       return;
     }
     this.showDateTimePopup = true;

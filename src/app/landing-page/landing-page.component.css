@@ -203,7 +203,7 @@ body {
 
 .pricing-btn::before {
     content: "";
-    position: absolute;
+    position: relative;
     top: 50%;
     left: 50%;
     width: 300%;
@@ -574,7 +574,7 @@ body {
     }
 
     .mask-group-container {
-        flex-direction: column;
+        /* flex-direction: column; */
         align-items: center;
     }
 
@@ -2275,10 +2275,17 @@ html {
         /* taller footer on mobile */
     }
 
-    .footer-left {
+    /* .footer-left {
         min-height: 200px;
-    }
+        width: 92%;
+    } */
 }
+
+/* @media (max-width: 420px) {
+    .footer-left {
+        width: 83%;
+    }
+} */
 
 .footer-links ul li a {
     color: white;
@@ -4419,4 +4426,206 @@ html {
 /* Ensure button text aligns well with spinner */
 .btn-primary .spinner-border-sm + span {
   vertical-align: middle;
+}
+
+
+
+/* =================================================================== */
+/* =================== TABLET RESPONSIVE STYLES ====================== */
+/* (Add this entire block to the end of your existing CSS file) */
+/* =================================================================== */
+
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+
+    /* --- Navbar Adjustments --- */
+    /* Resizes the desktop navbar to fit on tablets */
+    .logo-container {
+        width: 300px;
+        clip-path: polygon(0 0, 100% 0, 75% 100%, 0% 100%);
+        margin-left: -30px;
+        height: 80px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .nav-links {
+        gap: 10px; /* Reduces space between links */
+    }
+
+    .nav-links a {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .pricing-btn {
+        margin-left: 1.5rem;
+        padding: 10px 24px;
+        font-size: 14px;
+    }
+    
+    /* --- Layout Stacking Adjustments --- */
+    /* Stacks two-column layouts vertically for a better fit */
+    .about-container,
+    .contact-wrapper,
+    .tech-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .about-text,
+    .contact-content {
+        text-align: center;
+    }
+
+    .about-image-wrapper {
+        margin-top: 40px;
+        max-width: 500px;
+    }
+    
+    .experience-box {
+        position: relative; /* Resets absolute positioning */
+        transform: none;
+        left: auto;
+        bottom: auto;
+        top: auto;
+        margin-top: -20px; /* Pulls it up slightly to overlap image */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .contact-image,
+    .tech-main-image {
+        display: none; /* Hides decorative images that take too much space */
+    }
+
+    .tech-items {
+        width: 100%;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Allows grid to be responsive */
+    }
+
+    /* --- Column Reductions for Grids --- */
+    /* Changes 3-column layouts to 2-column layouts */
+    .pricing-container .card,
+    .pricing-container .card.highlight-card {
+        flex-basis: calc(50% - 2rem); /* 2 cards per row */
+        max-width: none;
+    }
+
+    .video-item-container {
+        flex: 0 0 calc(50% - 10px); /* 2 videos per row */
+    }
+
+    .questionAndAnswerContainer .questionAndAnswer {
+        flex: 0 0 calc(50% - 10px); /* 2 FAQs per row */
+    }
+
+    .timeline-row.staggered {
+        margin-left: 0; /* Removes the large desktop stagger */
+    }
+}
+
+
+
+/* =================================================================== */
+/* ============ CORRECTED TABLET RESPONSIVE STYLES =================== */
+/* Add this single block to the very end of your original CSS file. */
+/* This code ONLY adjusts layout and spacing. It does NOT change any colors. */
+/* =================================================================== */
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+
+    /* --- Navbar Adjustments --- */
+    /* This resizes the desktop navbar to fit comfortably on a tablet screen. */
+    .navbar {
+        padding: 0 15px;
+    }
+
+    .logo-container {
+        width: 280px;
+        clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+        margin-left: -15px;
+        height: 80px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .nav-links {
+        gap: 10px; /* Reduces space between links */
+    }
+
+    .nav-links a {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .pricing-btn {
+        margin-left: 1rem;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    /* --- Main Layout Stacking --- */
+    /* This stacks two-column layouts vertically for a better fit on portrait tablets. */
+    .about-container,
+    .contact-wrapper,
+    .tech-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .about-text,
+    .contact-content {
+        text-align: center;
+        max-width: 600px;
+    }
+
+    .about-image-wrapper {
+        margin-top: 40px;
+        max-width: 500px;
+    }
+    
+    .experience-box {
+        position: relative; /* Resets absolute positioning from desktop */
+        transform: none;
+        left: auto;
+        bottom: auto;
+        top: auto;
+        margin: -20px auto 0 auto; /* Negative margin to overlap, centered */
+    }
+
+    .contact-image,
+    .tech-main-image {
+        display: none; /* Hides decorative images that take up too much space on tablets */
+    }
+
+    .tech-items {
+        width: 100%;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Allows grid to be responsive */
+    }
+
+    /* --- Grid & Column Reductions --- */
+    /* This changes 3-column layouts to 2-column layouts, which is standard for tablets. */
+    .pricing-container .card,
+    .pricing-container .card.highlight-card {
+        flex-basis: calc(50% - 2rem) !important; /* 2 cards per row */
+        max-width: none !important;
+    }
+
+    .video-item-container {
+        flex: 0 0 calc(50% - 10px); /* 2 videos per row */
+    }
+
+    .questionAndAnswerContainer .questionAndAnswer {
+        flex: 0 0 calc(50% - 10px); /* 2 FAQs per row */
+    }
+
+    .timeline-row.staggered {
+        margin-left: 0; /* Removes the large desktop stagger effect */
+    }
 }

@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   baseurl:"http://localhost:3000/api",
-  image_url: "http://localhost:3000",
+  image_url: "http://localhost:3000/api",
   frontend: "http://localhost:4200"
 };
 
