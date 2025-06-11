@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "aviator_game_admin_panel": {
+    "consultency_frontend": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/aviator_game_admin_panel",
+            "outputPath": "dist/consultency_frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -70,10 +70,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "aviator_game_admin_panel:build:production"
+              "browserTarget": "consultency_frontend:build:production"
             },
             "development": {
-              "browserTarget": "aviator_game_admin_panel:build:development"
+              "browserTarget": "consultency_frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -81,7 +81,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "aviator_game_admin_panel:build"
+            "browserTarget": "consultency_frontend:build"
           }
         },
         "test": {

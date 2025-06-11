@@ -273,7 +273,7 @@
         </div>
 
         <!-- Mobile Icon -->
-        <div class="home-icon" id="homeIcon" (click)="toggleSlider()">
+        <div *ngIf="!showPricingPopup" class="home-icon" id="homeIcon" (click)="toggleSlider()">
             <img src="../../assets/Group 8.png" alt="Home Icon" />
         </div>
 
@@ -281,7 +281,7 @@
 
 </div>
 
-<div class="mask-group-container">
+<div class="mask-group-container" *ngIf="!showPricingPopup">
     <img *ngIf="icon_1_url" [src]="icon_1_url" alt="Icon 1"
         class="hero_maskGroup" />
     <img *ngIf="icon_2_url" [src]="icon_2_url" alt="Icon 2"
@@ -343,6 +343,7 @@
                 [src]="baseUrl + banner.file_url"
                 class="slider-video"
                 [class.active]="i === currentIndex"
+                autoplay
                 controls
                 loop
                 playsinline
@@ -808,6 +809,20 @@
         <button class="ok-btn" (click)="closeFinalStatusPopup()">Okay</button>
     </div>
 </div>
+
+
+<!-- ================== FILL FORM FIRST POPUP ================== -->
+<div *ngIf="showFillFormPopup" class="overlay" (click)="closeFillFormPopup()">
+    <div style="border: 2px solid white;" class="final-status-popup" (click)="$event.stopPropagation()">
+        <h2>Information Required</h2>
+        <p>
+            Please fill in your Full Name, Email, and Phone Number before proceeding to book an appointment.
+        </p>
+        <button class="ok-btn" (click)="closeFillFormPopup()">Okay</button>
+    </div>
+</div>
+<!-- ================== END OF FILL FORM POPUP ================== -->
+
 
 <!-- Tech Expert Page -->
 <section id="tech-expert" *ngIf="!showPricingPopup">
