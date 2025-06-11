@@ -12,5 +12,4 @@ export const environment = {
   image_url: "https://scratchtosuccess.com/api",
   // frontend: "https://scratchtosuccess.com/api"
 };
-};
 
