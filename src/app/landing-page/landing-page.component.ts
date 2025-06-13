@@ -648,6 +648,56 @@ export class LandingPageComponent implements OnInit {
    * This is the main function that starts the payment process.
    * It now calls the generic `createOrder` service method and handles the dynamic response.
    */
+  // proceedToPayment(): void {
+  //   this.showConfirmPaymentPopup = false; // Close the confirmation popup
+  //   this.bookingLoading = true;           // Show a loading state on the button
+
+  //   // Call the new generic createOrder method from your service
+  //   this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
+  //     next: (res) => {
+  //       if (res.status) {
+  //         // --- THIS IS THE NEW DYNAMIC LOGIC ---
+  //         // Check which gateway the backend chose to use
+  //         if (res.gateway === 'razorpay') {
+  //           // If it's Razorpay, call the existing Razorpay payment handler
+  //           this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
+
+  //         } else if (res.gateway === 'phonepe') {
+  //           // If it's PhonePe, the backend sent a redirectUrl.
+  //           // The only job of the frontend is to redirect the user.
+  //           if (res.redirectUrl) {
+  //             window.location.href = res.redirectUrl;
+  //           } else {
+  //             // Handle error if the URL is missing
+  //             this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
+  //             this.bookingLoading = false; // Stop the loading spinner
+  //           }
+  //         } else {
+  //           // Handle any other unknown gateways or errors
+  //           this.showErrorSnackbar('An unsupported payment gateway was returned.');
+  //           this.bookingLoading = false;
+  //         }
+  //       } else {
+  //         // Handle error response from your own backend (e.g., "No active gateway")
+  //         this.showErrorSnackbar(res.message || 'Error creating payment order.');
+  //         this.bookingLoading = false;
+  //       }
+  //     },
+  //     error: (err) => {
+  //       // Handle HTTP errors (e.g., server is down)
+  //       this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
+  //       this.bookingLoading = false;
+  //     }
+  //   });
+  // }
+
+
+
+  // Implement phone pe 
+  /**
+   * This is the main function that starts the payment process.
+   * It now calls the generic `createOrder` service method and handles the dynamic response.
+   */
   proceedToPayment(): void {
     this.showConfirmPaymentPopup = false; // Close the confirmation popup
     this.bookingLoading = true;           // Show a loading state on the button
@@ -664,7 +714,14 @@ export class LandingPageComponent implements OnInit {
 
           } else if (res.gateway === 'phonepe') {
             // If it's PhonePe, the backend sent a redirectUrl.
-            // The only job of the frontend is to redirect the user.
+            this.interestedBooking(this.pendingBookingData);
+            // --- MODIFICATION START ---
+            // Store booking data in session storage before redirecting
+            if (this.pendingBookingData) {
+              sessionStorage.setItem('pendingBooking', JSON.stringify(this.pendingBookingData));
+            }
+            // --- MODIFICATION END ---
+
             if (res.redirectUrl) {
               window.location.href = res.redirectUrl;
             } else {
@@ -685,56 +742,69 @@ export class LandingPageComponent implements OnInit {
       },
       error: (err) => {
         // Handle HTTP errors (e.g., server is down)
-        this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
+        this.showErrorSnackbar(err?.error?.message || 'A server error occurred while initiating payment.');
         this.bookingLoading = false;
       }
     });
   }
 
 
-  // --- NEW FUNCTION TO HANDLE THE USER RETURNING FROM PAYMENT ---
-    handlePaymentReturn(): void {
-        this.route.queryParamMap.subscribe(params => {
-            const transactionId = params.get('transaction_id');
+  // --- REVISED FUNCTION TO HANDLE THE USER RETURNING FROM PAYMENT ---
+  handlePaymentReturn(): void {
+    this.route.queryParamMap.subscribe(params => {
+        const transactionId = params.get('transaction_id'); 
+        
+        if (transactionId) {
+            this.isLoading = true; 
             
-            // If a transaction_id is present in the URL, it means the user is returning from PhonePe
-            if (transactionId) {
-                this.isLoading = true; // Show a fullscreen loader
-                
-                // Call the backend to get the final status
-                this.landingService.checkPaymentStatus(transactionId).subscribe({
-                    next: (res) => {
-                        this.isLoading = false; // Hide loader
-                        if (res.success && res.code === 'PAYMENT_SUCCESS') {
-                            this.bookingSuccessFlag = true;
-                            this.showFinalStatusPopup = true;
-                        } else {
-                            this.bookingSuccessFlag = false;
-                            this.showFinalStatusPopup = true;
-                        }
-                        // Clean the URL by removing the query parameters
-                        this.router.navigate([], {
-                            relativeTo: this.route,
-                            queryParams: { transaction_id: null },
-                            queryParamsHandling: 'merge',
-                        });
-                    },
-                    error: (err) => {
-                        this.isLoading = false; // Hide loader
-                        this.bookingSuccessFlag = false;
-                        this.showFinalStatusPopup = true;
-                        console.error("Failed to check payment status:", err);
-                        // Clean the URL
-                        this.router.navigate([], {
-                            relativeTo: this.route,
-                            queryParams: { transaction_id: null },
-                            queryParamsHandling: 'merge',
-                        });
-                    }
-                });
+            const bookingDataString = sessionStorage.getItem('pendingBooking');
+
+            this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { transaction_id: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+
+            if (!bookingDataString) {
+                console.error('Returned from payment but no pending booking data was found.');
+                this.isLoading = false;
+                this.showErrorSnackbar('Could not retrieve booking details after payment. Please contact support.');
+                return;
             }
-        });
-    }
+
+            sessionStorage.removeItem('pendingBooking');
+            const bookingData = JSON.parse(bookingDataString);
+
+            this.landingService.checkPaymentStatus(transactionId).subscribe({
+                next: (res) => {
+                    this.isLoading = false; 
+                    
+                    if (res.success && res.code === 'PAYMENT_SUCCESS') {
+                        // GOAL MET: Payment was successful.
+                        // Your createBooking() probably creates a NEW record with 'paid' status.
+                        // This is fine, but for advanced systems, you would UPDATE the
+                        // 'interested' record to 'paid' instead of creating a new one.
+                        bookingData.paymentId = res.data?.transactionId || transactionId;
+                        this.createBooking(bookingData);
+                    } else {
+                        // GOAL MET: Payment failed or was cancelled by user on the PhonePe page.
+                        // We ALREADY created an 'interested' record before the redirect.
+                        // So, we DO NOT call interestedBooking() again here, to avoid duplicates.
+                        // We just inform the user.
+                        this.showErrorSnackbar('Your payment was not completed. Your booking interest has been recorded.');
+                    }
+                },
+                error: (err) => {
+                    this.isLoading = false; 
+                    // An error occurred. The 'interested' record already exists. Just show an error.
+                    console.error("Failed to check payment status:", err);
+                    this.showErrorSnackbar('We could not verify your payment status. Please contact support if you were charged.');
+                }
+            });
+        }
+    });
+}
 
 
   // Method to show error using Snackbar (or alert)
@@ -743,7 +813,7 @@ export class LandingPageComponent implements OnInit {
     alert(message); // Simple alert for demonstration
   }
 
-  
+
 
   /**
    * This function handles opening the Razorpay popup.
@@ -785,7 +855,7 @@ export class LandingPageComponent implements OnInit {
   }
 
 
-  
+
 
 
 
