@@ -182,24 +182,24 @@ export class LandingPageService {
    * The backend will decide whether to use Razorpay, PhonePe, etc.
    * @param amount The amount for the order (in base units like Rupees).
    */
-  // createOrder(amount: number): Observable<any> {
-  //   // Calls the new generic endpoint
-  //   return this.http.post(`${this.baseUrl}/payment/create-order`, { amount }).pipe(
-  //     catchError((error) => {
-  //       return throwError(error.error?.message || 'Error initiating payment');
-  //     })
-  //   );
-  // }
-
-
-  // The service method now accepts the full booking data object.
-  createOrder(bookingData: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/payment/create-order`, bookingData).pipe(
+  createOrder(amount: number): Observable<any> {
+    // Calls the new generic endpoint
+    return this.http.post(`${this.baseUrl}/payment/create-order`, { amount }).pipe(
       catchError((error) => {
         return throwError(error.error?.message || 'Error initiating payment');
       })
     );
   }
+
+
+  // The service method now accepts the full booking data object.
+  // createOrder(bookingData: any): Observable<any> {
+  //   return this.http.post(`${this.baseUrl}/payment/create-order`, bookingData).pipe(
+  //     catchError((error) => {
+  //       return throwError(error.error?.message || 'Error initiating payment');
+  //     })
+  //   );
+  // }
 
 
 
@@ -211,6 +211,15 @@ export class LandingPageService {
   verifyPayment(payload: any): Observable<any> {
     // Calls the new generic endpoint
     return this.http.post(`${this.baseUrl}/payment/verify-payment`, payload);
+  }
+
+
+  /**
+ * Calls the backend to check the final status of a PhonePe transaction.
+ * @param transactionId The merchantTransactionId of the payment.
+ */
+  checkPaymentStatus(transactionId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payment/check-status/${transactionId}`);
   }
 
 

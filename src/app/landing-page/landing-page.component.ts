@@ -5,7 +5,7 @@ import { environment } from 'src/environments/environment';
 import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { ActivatedRoute, ParamMap } from '@angular/router'; // <-- Import 
+import { ActivatedRoute, ParamMap, Router } from '@angular/router'; // <-- Import 
 
 
 
@@ -219,7 +219,7 @@ export class LandingPageComponent implements OnInit {
 
 
 
-  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer, private route: ActivatedRoute) { }
+  constructor(private landingService: LandingPageService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
 
@@ -229,7 +229,7 @@ export class LandingPageComponent implements OnInit {
     // --- Facebook Referrer Detection ---
     this.detectFacebookReferral();
 
-
+    this.handlePaymentReturn();
     this.fetchNavBar();
     this.fetchLandingPageInfo();
     this.fetchLandingPageBanners(); // Fetch banners on component initialization
@@ -552,7 +552,7 @@ export class LandingPageComponent implements OnInit {
     }
   }
 
-   // ADD THIS NEW METHOD TO CLOSE THE POPUP
+  // ADD THIS NEW METHOD TO CLOSE THE POPUP
   closeFillFormPopup(): void {
     this.showFillFormPopup = false;
   }
@@ -561,7 +561,7 @@ export class LandingPageComponent implements OnInit {
   openDateTimePopup(): void {
     this.bookingError = '';
 
- // ================== START: ADD VALIDATION LOGIC HERE ==================
+    // ================== START: ADD VALIDATION LOGIC HERE ==================
     if (!this.name.trim() || !this.email.trim() || !this.phone.trim()) {
       // If any of the required fields are empty (after trimming whitespace)
       this.showFillFormPopup = true; // Show the new "fill form" popup
@@ -648,82 +648,93 @@ export class LandingPageComponent implements OnInit {
    * This is the main function that starts the payment process.
    * It now calls the generic `createOrder` service method and handles the dynamic response.
    */
-  // proceedToPayment(): void {
-  //   this.showConfirmPaymentPopup = false; // Close the confirmation popup
-  //   this.bookingLoading = true;           // Show a loading state on the button
+  proceedToPayment(): void {
+    this.showConfirmPaymentPopup = false; // Close the confirmation popup
+    this.bookingLoading = true;           // Show a loading state on the button
 
-  //   // Call the new generic createOrder method from your service
-  //   this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
-  //     next: (res) => {
-  //       if (res.status) {
-  //         // --- THIS IS THE NEW DYNAMIC LOGIC ---
-  //         // Check which gateway the backend chose to use
-  //         if (res.gateway === 'razorpay') {
-  //           // If it's Razorpay, call the existing Razorpay payment handler
-  //           this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
-            
-  //         } else if (res.gateway === 'phonepe') {
-  //           // If it's PhonePe, the backend sent a redirectUrl.
-  //           // The only job of the frontend is to redirect the user.
-  //           if (res.redirectUrl) {
-  //             window.location.href = res.redirectUrl;
-  //           } else {
-  //             // Handle error if the URL is missing
-  //             this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
-  //             this.bookingLoading = false; // Stop the loading spinner
-  //           }
-  //         } else {
-  //           // Handle any other unknown gateways or errors
-  //           this.showErrorSnackbar('An unsupported payment gateway was returned.');
-  //           this.bookingLoading = false;
-  //         }
-  //       } else {
-  //         // Handle error response from your own backend (e.g., "No active gateway")
-  //         this.showErrorSnackbar(res.message || 'Error creating payment order.');
-  //         this.bookingLoading = false;
-  //       }
-  //     },
-  //     error: (err) => {
-  //       // Handle HTTP errors (e.g., server is down)
-  //       this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
-  //       this.bookingLoading = false;
-  //     }
-  //   });
-  // }
-
-
-  // This function that triggers the entire flow
-proceedToPayment(): void {
-    this.showConfirmPaymentPopup = false;
-    this.bookingLoading = true;
-
-    // The 'pendingBookingData' object already has name, email, phone, date, time, and amount.
-    // We send this whole object to the backend now.
-    this.landingService.createOrder(this.pendingBookingData).subscribe({
+    // Call the new generic createOrder method from your service
+    this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
       next: (res) => {
         if (res.status) {
+          // --- THIS IS THE NEW DYNAMIC LOGIC ---
+          // Check which gateway the backend chose to use
           if (res.gateway === 'razorpay') {
+            // If it's Razorpay, call the existing Razorpay payment handler
             this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
+
           } else if (res.gateway === 'phonepe') {
-            window.location.href = res.redirectUrl;
+            // If it's PhonePe, the backend sent a redirectUrl.
+            // The only job of the frontend is to redirect the user.
+            if (res.redirectUrl) {
+              window.location.href = res.redirectUrl;
+            } else {
+              // Handle error if the URL is missing
+              this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
+              this.bookingLoading = false; // Stop the loading spinner
+            }
           } else {
-            this.showErrorSnackbar('Unsupported payment gateway.');
+            // Handle any other unknown gateways or errors
+            this.showErrorSnackbar('An unsupported payment gateway was returned.');
             this.bookingLoading = false;
           }
         } else {
+          // Handle error response from your own backend (e.g., "No active gateway")
           this.showErrorSnackbar(res.message || 'Error creating payment order.');
           this.bookingLoading = false;
         }
       },
       error: (err) => {
+        // Handle HTTP errors (e.g., server is down)
         this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
         this.bookingLoading = false;
       }
     });
-}
+  }
 
 
-
+  // --- NEW FUNCTION TO HANDLE THE USER RETURNING FROM PAYMENT ---
+    handlePaymentReturn(): void {
+        this.route.queryParamMap.subscribe(params => {
+            const transactionId = params.get('transaction_id');
+            
+            // If a transaction_id is present in the URL, it means the user is returning from PhonePe
+            if (transactionId) {
+                this.isLoading = true; // Show a fullscreen loader
+                
+                // Call the backend to get the final status
+                this.landingService.checkPaymentStatus(transactionId).subscribe({
+                    next: (res) => {
+                        this.isLoading = false; // Hide loader
+                        if (res.success && res.code === 'PAYMENT_SUCCESS') {
+                            this.bookingSuccessFlag = true;
+                            this.showFinalStatusPopup = true;
+                        } else {
+                            this.bookingSuccessFlag = false;
+                            this.showFinalStatusPopup = true;
+                        }
+                        // Clean the URL by removing the query parameters
+                        this.router.navigate([], {
+                            relativeTo: this.route,
+                            queryParams: { transaction_id: null },
+                            queryParamsHandling: 'merge',
+                        });
+                    },
+                    error: (err) => {
+                        this.isLoading = false; // Hide loader
+                        this.bookingSuccessFlag = false;
+                        this.showFinalStatusPopup = true;
+                        console.error("Failed to check payment status:", err);
+                        // Clean the URL
+                        this.router.navigate([], {
+                            relativeTo: this.route,
+                            queryParams: { transaction_id: null },
+                            queryParamsHandling: 'merge',
+                        });
+                    }
+                });
+            }
+        });
+    }
 
 
   // Method to show error using Snackbar (or alert)
@@ -732,61 +743,7 @@ proceedToPayment(): void {
     alert(message); // Simple alert for demonstration
   }
 
-// This is previous working code
-  // startRazorpayPayment(order: any, bookingData: any): void {
-  //   const options: any = {
-  //     key: 'rzp_live_0cClDW4rSilf2w', // This is fine to keep on the frontend
-  //     amount: order.amount,
-  //     currency: order.currency,
-  //     name: 'Sunra Softech Pvt Ltd',
-  //     description: 'Booking Payment',
-  //     order_id: order.id,
-  //     handler: (response: any) => {
-  //       // On payment success
-  //       // console.log('Payment Success:', response);
-
-  //       // Send payment details to backend for verification
-  //       this.verifyPayment(response, bookingData);
-  //     },
-  //     prefill: {
-  //       name: bookingData.name,
-  //       email: bookingData.email,
-  //       contact: bookingData.phone
-  //     },
-  //     notes: {
-  //       bookingTime: `${bookingData.date} ${bookingData.time}`
-  //     },
-  //     theme: {
-  //       color: '#3399cc'
-  //     },
-  //     modal: {
-  //       ondismiss: () => {
-  //         // User closed the payment popup without paying
-  //         // console.log('Payment popup closed by user');
-  //         this.interestedBooking(bookingData); // Call the interested API
-  //         this.bookingLoading = false; // Reset loading spinner
-  //       }
-  //     }
-  //   };
-
-  //   const rzp = new Razorpay(options);
-  //   rzp.open();
-
-  //   rzp.on('payment.failed', (response: any) => {
-  //     // console.error('Payment Failed:', response.error);
-  //     this.bookingError = 'Payment failed. Please try again.';
-  //     this.interestedBooking(bookingData); // Log as interested
-  //   });
-
-  //   // Set a fallback timeout in case the user closes the Razorpay window with confirmation
-  //   setTimeout(() => {
-  //     if (this.bookingLoading) {
-  //       // console.log('Razorpay screen was likely closed or payment not completed');
-  //       this.bookingLoading = false; // Reset loading state after a delay
-  //     }
-  //   }, 5000); // Wait 5 seconds before resetting the loading state
-  // }
-
+  
 
   /**
    * This function handles opening the Razorpay popup.
@@ -828,32 +785,36 @@ proceedToPayment(): void {
   }
 
 
+  
 
 
 
-// This is previous working code
-  // verifyPayment(response: any, bookingData: any): void {
-  //   const paymentPayload = {
-  //     razorpay_order_id: response.razorpay_order_id,
-  //     razorpay_payment_id: response.razorpay_payment_id,
-  //     razorpay_signature: response.razorpay_signature
-  //   };
 
-  //   this.landingService.verifyRazorpayPayment(paymentPayload).subscribe({
-  //     next: (verifyRes) => {
-  //       if (verifyRes.status) {
-  //         // Payment is verified, proceed with booking
-  //         bookingData.paymentId = response.razorpay_payment_id;
-  //         this.createBooking(bookingData);
-  //       } else {
-  //         this.bookingError = 'Payment verification failed.';
-  //       }
-  //     },
-  //     error: () => {
-  //       this.bookingError = 'Payment verification failed.';
-  //     }
-  //   });
-  // }
+
+
+  // This is previous working code
+  verifyPayment(response: any, bookingData: any): void {
+    const paymentPayload = {
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
+    };
+
+    this.landingService.verifyRazorpayPayment(paymentPayload).subscribe({
+      next: (verifyRes) => {
+        if (verifyRes.status) {
+          // Payment is verified, proceed with booking
+          bookingData.paymentId = response.razorpay_payment_id;
+          this.createBooking(bookingData);
+        } else {
+          this.bookingError = 'Payment verification failed.';
+        }
+      },
+      error: () => {
+        this.bookingError = 'Payment verification failed.';
+      }
+    });
+  }
 
 
 
@@ -888,9 +849,6 @@ proceedToPayment(): void {
       }
     });
   }
-
-
-
 
 
   openFinalPopup(): void {
