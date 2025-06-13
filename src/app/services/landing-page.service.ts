@@ -218,8 +218,17 @@ export class LandingPageService {
  * Calls the backend to check the final status of a PhonePe transaction.
  * @param transactionId The merchantTransactionId of the payment.
  */
+  // checkPaymentStatus(transactionId: string): Observable<any> {
+  //   return this.http.get(`${this.baseUrl}/payment/check-status/${transactionId}`);
+  // }
+
+  /**
+ * Calls the backend to check the status of a PhonePe transaction.
+ * @param transactionId The merchantTransactionId from PhonePe.
+ */
   checkPaymentStatus(transactionId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/payment/check-status/${transactionId}`);
+    // NOTE: Adjust the URL to match your backend route structure
+    return this.http.get<any>(`${this.baseUrl}/payment/status/${transactionId}`);
   }
 
 
