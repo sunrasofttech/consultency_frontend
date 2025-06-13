@@ -191,6 +191,18 @@ export class LandingPageService {
     );
   }
 
+
+  // The service method now accepts the full booking data object.
+  // createOrder(bookingData: any): Observable<any> {
+  //   return this.http.post(`${this.baseUrl}/payment/create-order`, bookingData).pipe(
+  //     catchError((error) => {
+  //       return throwError(error.error?.message || 'Error initiating payment');
+  //     })
+  //   );
+  // }
+
+
+
   /**
    * Calls the new generic endpoint to verify a payment.
    * The payload must now include the gateway_name.
@@ -199,6 +211,15 @@ export class LandingPageService {
   verifyPayment(payload: any): Observable<any> {
     // Calls the new generic endpoint
     return this.http.post(`${this.baseUrl}/payment/verify-payment`, payload);
+  }
+
+
+  /**
+ * Calls the backend to check the final status of a PhonePe transaction.
+ * @param transactionId The merchantTransactionId of the payment.
+ */
+  checkPaymentStatus(transactionId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payment/check-status/${transactionId}`);
   }
 
 
