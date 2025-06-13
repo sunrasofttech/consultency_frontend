@@ -618,29 +618,82 @@ export class LandingPageComponent implements OnInit {
 
   // Component code
 
+  // This is previous working code
+  // proceedToPayment(): void {
+  //   this.showConfirmPaymentPopup = false;
+
+  //   this.landingService.createRazorpayOrder(this.pendingBookingData.amount).subscribe({
+  //     next: (res) => {
+  //       if (res.status && res.order) {
+  //         this.startRazorpayPayment(res.order, this.pendingBookingData);
+  //       } else {
+  //         this.bookingError = 'Error creating Razorpay order.';
+  //         this.showErrorSnackbar(this.bookingError);
+  //         this.bookingLoading = false;
+
+  //       }
+  //     },
+  //     error: (err) => {
+  //       // Display error message from backend (or fallback message)
+  //       this.bookingError = err || 'Error initiating payment.';
+  //       this.showErrorSnackbar(this.bookingError);
+  //       this.bookingLoading = false;
+
+  //     }
+  //   });
+  // }
+
+
+  /**
+   * This is the main function that starts the payment process.
+   * It now calls the generic `createOrder` service method and handles the dynamic response.
+   */
   proceedToPayment(): void {
-    this.showConfirmPaymentPopup = false;
+    this.showConfirmPaymentPopup = false; // Close the confirmation popup
+    this.bookingLoading = true;           // Show a loading state on the button
 
-    this.landingService.createRazorpayOrder(this.pendingBookingData.amount).subscribe({
+    // Call the new generic createOrder method from your service
+    this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
       next: (res) => {
-        if (res.status && res.order) {
-          this.startRazorpayPayment(res.order, this.pendingBookingData);
+        if (res.status) {
+          // --- THIS IS THE NEW DYNAMIC LOGIC ---
+          // Check which gateway the backend chose to use
+          if (res.gateway === 'razorpay') {
+            // If it's Razorpay, call the existing Razorpay payment handler
+            this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
+            
+          } else if (res.gateway === 'phonepe') {
+            // If it's PhonePe, the backend sent a redirectUrl.
+            // The only job of the frontend is to redirect the user.
+            if (res.redirectUrl) {
+              window.location.href = res.redirectUrl;
+            } else {
+              // Handle error if the URL is missing
+              this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
+              this.bookingLoading = false; // Stop the loading spinner
+            }
+          } else {
+            // Handle any other unknown gateways or errors
+            this.showErrorSnackbar('An unsupported payment gateway was returned.');
+            this.bookingLoading = false;
+          }
         } else {
-          this.bookingError = 'Error creating Razorpay order.';
-          this.showErrorSnackbar(this.bookingError);
+          // Handle error response from your own backend (e.g., "No active gateway")
+          this.showErrorSnackbar(res.message || 'Error creating payment order.');
           this.bookingLoading = false;
-
         }
       },
       error: (err) => {
-        // Display error message from backend (or fallback message)
-        this.bookingError = err || 'Error initiating payment.';
-        this.showErrorSnackbar(this.bookingError);
+        // Handle HTTP errors (e.g., server is down)
+        this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
         this.bookingLoading = false;
-
       }
     });
   }
+
+
+
+
 
   // Method to show error using Snackbar (or alert)
   showErrorSnackbar(message: string): void {
@@ -648,39 +701,88 @@ export class LandingPageComponent implements OnInit {
     alert(message); // Simple alert for demonstration
   }
 
+// This is previous working code
+  // startRazorpayPayment(order: any, bookingData: any): void {
+  //   const options: any = {
+  //     key: 'rzp_live_0cClDW4rSilf2w', // This is fine to keep on the frontend
+  //     amount: order.amount,
+  //     currency: order.currency,
+  //     name: 'Sunra Softech Pvt Ltd',
+  //     description: 'Booking Payment',
+  //     order_id: order.id,
+  //     handler: (response: any) => {
+  //       // On payment success
+  //       // console.log('Payment Success:', response);
 
-  startRazorpayPayment(order: any, bookingData: any): void {
+  //       // Send payment details to backend for verification
+  //       this.verifyPayment(response, bookingData);
+  //     },
+  //     prefill: {
+  //       name: bookingData.name,
+  //       email: bookingData.email,
+  //       contact: bookingData.phone
+  //     },
+  //     notes: {
+  //       bookingTime: `${bookingData.date} ${bookingData.time}`
+  //     },
+  //     theme: {
+  //       color: '#3399cc'
+  //     },
+  //     modal: {
+  //       ondismiss: () => {
+  //         // User closed the payment popup without paying
+  //         // console.log('Payment popup closed by user');
+  //         this.interestedBooking(bookingData); // Call the interested API
+  //         this.bookingLoading = false; // Reset loading spinner
+  //       }
+  //     }
+  //   };
+
+  //   const rzp = new Razorpay(options);
+  //   rzp.open();
+
+  //   rzp.on('payment.failed', (response: any) => {
+  //     // console.error('Payment Failed:', response.error);
+  //     this.bookingError = 'Payment failed. Please try again.';
+  //     this.interestedBooking(bookingData); // Log as interested
+  //   });
+
+  //   // Set a fallback timeout in case the user closes the Razorpay window with confirmation
+  //   setTimeout(() => {
+  //     if (this.bookingLoading) {
+  //       // console.log('Razorpay screen was likely closed or payment not completed');
+  //       this.bookingLoading = false; // Reset loading state after a delay
+  //     }
+  //   }, 5000); // Wait 5 seconds before resetting the loading state
+  // }
+
+
+  /**
+   * This function handles opening the Razorpay popup.
+   * It's now updated to use the dynamic key_id from the backend.
+   */
+  startRazorpayPayment(order: any, key_id: string, bookingData: any): void {
     const options: any = {
-      key: 'rzp_live_0cClDW4rSilf2w', // This is fine to keep on the frontend
+      key: key_id, // <-- USES DYNAMIC KEY FROM BACKEND
       amount: order.amount,
       currency: order.currency,
       name: 'Sunra Softech Pvt Ltd',
       description: 'Booking Payment',
       order_id: order.id,
       handler: (response: any) => {
-        // On payment success
-        // console.log('Payment Success:', response);
-
-        // Send payment details to backend for verification
-        this.verifyPayment(response, bookingData);
+        // On success, call your verify function
+        this.verifyRazorpayPayment(response, bookingData);
       },
       prefill: {
         name: bookingData.name,
         email: bookingData.email,
         contact: bookingData.phone
       },
-      notes: {
-        bookingTime: `${bookingData.date} ${bookingData.time}`
-      },
-      theme: {
-        color: '#3399cc'
-      },
       modal: {
         ondismiss: () => {
-          // User closed the payment popup without paying
-          // console.log('Payment popup closed by user');
-          this.interestedBooking(bookingData); // Call the interested API
-          this.bookingLoading = false; // Reset loading spinner
+          // User closed the popup without paying
+          this.interestedBooking(bookingData);
+          this.bookingLoading = false;
         }
       }
     };
@@ -689,42 +791,76 @@ export class LandingPageComponent implements OnInit {
     rzp.open();
 
     rzp.on('payment.failed', (response: any) => {
-      // console.error('Payment Failed:', response.error);
-      this.bookingError = 'Payment failed. Please try again.';
-      this.interestedBooking(bookingData); // Log as interested
+      this.interestedBooking(bookingData);
+      this.bookingLoading = false;
     });
-
-    // Set a fallback timeout in case the user closes the Razorpay window with confirmation
-    setTimeout(() => {
-      if (this.bookingLoading) {
-        // console.log('Razorpay screen was likely closed or payment not completed');
-        this.bookingLoading = false; // Reset loading state after a delay
-      }
-    }, 5000); // Wait 5 seconds before resetting the loading state
   }
 
-  verifyPayment(response: any, bookingData: any): void {
+
+
+
+
+// This is previous working code
+  // verifyPayment(response: any, bookingData: any): void {
+  //   const paymentPayload = {
+  //     razorpay_order_id: response.razorpay_order_id,
+  //     razorpay_payment_id: response.razorpay_payment_id,
+  //     razorpay_signature: response.razorpay_signature
+  //   };
+
+  //   this.landingService.verifyRazorpayPayment(paymentPayload).subscribe({
+  //     next: (verifyRes) => {
+  //       if (verifyRes.status) {
+  //         // Payment is verified, proceed with booking
+  //         bookingData.paymentId = response.razorpay_payment_id;
+  //         this.createBooking(bookingData);
+  //       } else {
+  //         this.bookingError = 'Payment verification failed.';
+  //       }
+  //     },
+  //     error: () => {
+  //       this.bookingError = 'Payment verification failed.';
+  //     }
+  //   });
+  // }
+
+
+
+  /**
+   * This function verifies the Razorpay payment with the backend.
+   * It now sends the gateway_name along with the payment data.
+   */
+  verifyRazorpayPayment(response: any, bookingData: any): void {
     const paymentPayload = {
+      gateway_name: 'razorpay', // We know this is Razorpay because this function was called
       razorpay_order_id: response.razorpay_order_id,
       razorpay_payment_id: response.razorpay_payment_id,
       razorpay_signature: response.razorpay_signature
     };
 
-    this.landingService.verifyRazorpayPayment(paymentPayload).subscribe({
+    // Call the new generic verifyPayment method
+    this.landingService.verifyPayment(paymentPayload).subscribe({
       next: (verifyRes) => {
         if (verifyRes.status) {
-          // Payment is verified, proceed with booking
           bookingData.paymentId = response.razorpay_payment_id;
           this.createBooking(bookingData);
         } else {
           this.bookingError = 'Payment verification failed.';
+          this.showErrorSnackbar(this.bookingError);
+          this.bookingLoading = false;
         }
       },
       error: () => {
         this.bookingError = 'Payment verification failed.';
+        this.showErrorSnackbar(this.bookingError);
+        this.bookingLoading = false;
       }
     });
   }
+
+
+
+
 
   openFinalPopup(): void {
 

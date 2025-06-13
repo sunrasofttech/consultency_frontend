@@ -173,4 +173,33 @@ export class LandingPageService {
   }
 
 
+  // =======================================================
+  // ===           MODIFIED PAYMENT METHODS              ===
+  // =======================================================
+
+  /**
+   * Calls the new generic endpoint to create a payment order.
+   * The backend will decide whether to use Razorpay, PhonePe, etc.
+   * @param amount The amount for the order (in base units like Rupees).
+   */
+  createOrder(amount: number): Observable<any> {
+    // Calls the new generic endpoint
+    return this.http.post(`${this.baseUrl}/payment/create-order`, { amount }).pipe(
+      catchError((error) => {
+        return throwError(error.error?.message || 'Error initiating payment');
+      })
+    );
+  }
+
+  /**
+   * Calls the new generic endpoint to verify a payment.
+   * The payload must now include the gateway_name.
+   * @param payload The verification data from the payment gateway.
+   */
+  verifyPayment(payload: any): Observable<any> {
+    // Calls the new generic endpoint
+    return this.http.post(`${this.baseUrl}/payment/verify-payment`, payload);
+  }
+
+
 }
