@@ -750,61 +750,148 @@ export class LandingPageComponent implements OnInit {
 
 
   // --- REVISED FUNCTION TO HANDLE THE USER RETURNING FROM PAYMENT ---
+  // handlePaymentReturn(): void {
+  //   this.route.queryParamMap.subscribe(params => {
+  //     const transactionId = params.get('transaction_id');
+
+  //     if (transactionId) {
+  //       this.isLoading = true;
+
+  //       const bookingDataString = sessionStorage.getItem('pendingBooking');
+
+  //       this.router.navigate([], {
+  //         relativeTo: this.route,
+  //         queryParams: { transaction_id: null },
+  //         queryParamsHandling: 'merge',
+  //         replaceUrl: true
+  //       });
+
+  //       if (!bookingDataString) {
+  //         console.error('Returned from payment but no pending booking data was found.');
+  //         this.isLoading = false;
+  //         this.showErrorSnackbar('Could not retrieve booking details after payment. Please contact support.');
+  //         return;
+  //       }
+
+  //       sessionStorage.removeItem('pendingBooking');
+  //       const bookingData = JSON.parse(bookingDataString);
+
+  //       this.landingService.checkPaymentStatus(transactionId).subscribe({
+  //         next: (res) => {
+  //           this.isLoading = false;
+
+  //           if (res.success && res.code === 'PAYMENT_SUCCESS') {
+  //             // GOAL MET: Payment was successful.
+  //             // Your createBooking() probably creates a NEW record with 'paid' status.
+  //             // This is fine, but for advanced systems, you would UPDATE the
+  //             // 'interested' record to 'paid' instead of creating a new one.
+  //             bookingData.paymentId = res.data?.transactionId || transactionId;
+  //             this.createBooking(bookingData);
+  //           } else {
+  //             // GOAL MET: Payment failed or was cancelled by user on the PhonePe page.
+  //             // We ALREADY created an 'interested' record before the redirect.
+  //             // So, we DO NOT call interestedBooking() again here, to avoid duplicates.
+  //             // We just inform the user.
+  //             this.showErrorSnackbar('Your payment was not completed. Your booking interest has been recorded.');
+  //           }
+  //         },
+  //         error: (err) => {
+  //           this.isLoading = false;
+  //           // An error occurred. The 'interested' record already exists. Just show an error.
+  //           console.error("Failed to check payment status:", err);
+  //           this.showErrorSnackbar('We could not verify your payment status. Please contact support if you were charged.');
+  //         }
+  //       });
+  //     }
+  //   });
+  // }
+
+
   handlePaymentReturn(): void {
     this.route.queryParamMap.subscribe(params => {
-        const transactionId = params.get('transaction_id'); 
-        
-        if (transactionId) {
-            this.isLoading = true; 
-            
-            const bookingDataString = sessionStorage.getItem('pendingBooking');
+      const transactionId = params.get('transaction_id');
+      if (!transactionId) {
+        return; // Exit if no transaction ID is present
+      }
 
-            this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: { transaction_id: null },
-                queryParamsHandling: 'merge',
-                replaceUrl: true
-            });
+      this.isLoading = true;
 
-            if (!bookingDataString) {
-                console.error('Returned from payment but no pending booking data was found.');
-                this.isLoading = false;
-                this.showErrorSnackbar('Could not retrieve booking details after payment. Please contact support.');
-                return;
+      // Clean the URL immediately to prevent re-triggering on refresh
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { transaction_id: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+
+      // --- NEW LOGIC: Check if this is a Purchase or a Booking return ---
+
+      const purchaseDataString = sessionStorage.getItem('pendingPurchase');
+      const bookingDataString = sessionStorage.getItem('pendingBooking');
+
+      if (purchaseDataString) {
+        // === IT'S A PURCHASE RETURN ===
+        sessionStorage.removeItem('pendingPurchase');
+        const { purchaseId } = JSON.parse(purchaseDataString);
+
+        this.landingService.checkPaymentStatus(transactionId).subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            if (res.success && res.code === 'PAYMENT_SUCCESS') {
+              // Payment successful, update the purchase status to 'paid'
+              this.updateUserPurchaseStatus(purchaseId, {
+                payment_status: 'paid',
+                payment_id: res.data?.transactionId || transactionId
+              });
+              this.purchaseSuccessFlag = true;
+              this.showPurchaseStatusPopup = true;
+            } else {
+              // Payment failed. The record already exists as 'pending'.
+              this.showErrorSnackbar('Your payment was not completed. Please try again.');
             }
+          },
+          error: (err) => {
+            this.isLoading = false;
+            console.error("Failed to check purchase payment status:", err);
+            this.showErrorSnackbar('We could not verify your payment status.');
+          }
+        });
 
-            sessionStorage.removeItem('pendingBooking');
-            const bookingData = JSON.parse(bookingDataString);
+      } else if (bookingDataString) {
+        // === IT'S A BOOKING RETURN ===
+        sessionStorage.removeItem('pendingBooking');
+        const bookingData = JSON.parse(bookingDataString);
 
-            this.landingService.checkPaymentStatus(transactionId).subscribe({
-                next: (res) => {
-                    this.isLoading = false; 
-                    
-                    if (res.success && res.code === 'PAYMENT_SUCCESS') {
-                        // GOAL MET: Payment was successful.
-                        // Your createBooking() probably creates a NEW record with 'paid' status.
-                        // This is fine, but for advanced systems, you would UPDATE the
-                        // 'interested' record to 'paid' instead of creating a new one.
-                        bookingData.paymentId = res.data?.transactionId || transactionId;
-                        this.createBooking(bookingData);
-                    } else {
-                        // GOAL MET: Payment failed or was cancelled by user on the PhonePe page.
-                        // We ALREADY created an 'interested' record before the redirect.
-                        // So, we DO NOT call interestedBooking() again here, to avoid duplicates.
-                        // We just inform the user.
-                        this.showErrorSnackbar('Your payment was not completed. Your booking interest has been recorded.');
-                    }
-                },
-                error: (err) => {
-                    this.isLoading = false; 
-                    // An error occurred. The 'interested' record already exists. Just show an error.
-                    console.error("Failed to check payment status:", err);
-                    this.showErrorSnackbar('We could not verify your payment status. Please contact support if you were charged.');
-                }
-            });
-        }
+        this.landingService.checkPaymentStatus(transactionId).subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            if (res.success && res.code === 'PAYMENT_SUCCESS') {
+              // Payment successful, create the final booking record
+              bookingData.paymentId = res.data?.transactionId || transactionId;
+              this.createBooking(bookingData);
+            } else {
+              // Payment failed. The 'interested' record already exists.
+              this.showErrorSnackbar('Your payment was not completed. Your booking interest has been recorded.');
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
+            console.error("Failed to check booking payment status:", err);
+            this.showErrorSnackbar('We could not verify your payment status.');
+          }
+        });
+
+      } else {
+        // Edge case: Transaction ID is in URL, but no session data found.
+        this.isLoading = false;
+        console.error('Returned from payment but no pending data was found in session storage.');
+        this.showErrorSnackbar('Could not retrieve your session details after payment.');
+      }
     });
-}
+  }
+
+
+
 
 
   // Method to show error using Snackbar (or alert)
@@ -1981,87 +2068,229 @@ export class LandingPageComponent implements OnInit {
 
 
   // Ensure correct price is used when creating the Razorpay order
+  // proceedToSignupPurchasePayment(): void {
+  //   this.closePriceConfirmPopup(); // Close confirmation popup first
+
+  //   if (!this.createdPurchaseId || !this.createdPurchaseData) {
+  //     this.showErrorSnackbar('No purchase data found. Please submit the form again.');
+  //     return;
+  //   }
+
+  //   // Use the price stored in createdPurchaseData (which has the correct final price)
+  //   const paymentAmount = this.createdPurchaseData.price;
+
+
+  //   this.landingService.createRazorpayOrder(paymentAmount).subscribe({ // <-- Use correct price
+  //     next: (res) => {
+  //       if (res.status && res.order) {
+  //         this.startRazorpaySignupPayment(res.order, this.createdPurchaseId, this.createdPurchaseData);
+  //       } else {
+  //         this.showErrorSnackbar(`Failed to create Razorpay order. ${res.message || ''}`);
+  //       }
+  //     },
+  //     error: (err) => {
+  //       const errorMsg = err?.error?.message || 'Error creating Razorpay order.';
+  //       this.showErrorSnackbar(errorMsg);
+  //     }
+  //   });
+  // }
+
+
+
+
   proceedToSignupPurchasePayment(): void {
     this.closePriceConfirmPopup(); // Close confirmation popup first
 
     if (!this.createdPurchaseId || !this.createdPurchaseData) {
-      this.showErrorSnackbar('No purchase data found. Please submit the form again.');
-      return;
+        this.showErrorSnackbar('No purchase data found. Please submit the form again.');
+        return;
     }
 
-    // Use the price stored in createdPurchaseData (which has the correct final price)
+    // Use the price stored in createdPurchaseData for the payment
     const paymentAmount = this.createdPurchaseData.price;
 
+    // *** KEY CHANGE: Call the generic createOrder service method ***
+    this.landingService.createOrder(paymentAmount).subscribe({
+        next: (res) => {
+            if (res.status) {
+                // --- DYNAMIC GATEWAY LOGIC ---
+                if (res.gateway === 'razorpay') {
+                    // If Razorpay is active, start the Razorpay popup flow
+                    // Pass the dynamic key_id from the backend response
+                    this.startRazorpaySignupPayment(res.order, res.key_id, this.createdPurchaseId, this.createdPurchaseData);
 
-    this.landingService.createRazorpayOrder(paymentAmount).subscribe({ // <-- Use correct price
-      next: (res) => {
-        if (res.status && res.order) {
-          this.startRazorpaySignupPayment(res.order, this.createdPurchaseId, this.createdPurchaseData);
-        } else {
-          this.showErrorSnackbar(`Failed to create Razorpay order. ${res.message || ''}`);
+                } else if (res.gateway === 'phonepe') {
+                    // If PhonePe is active, prepare for redirect
+                    
+                    // 1. Store the necessary purchase info in session storage.
+                    //    This is how we'll remember what to update when the user returns.
+                    const purchaseSessionData = {
+                        purchaseId: this.createdPurchaseId,
+                        purchaseData: this.createdPurchaseData
+                    };
+                    sessionStorage.setItem('pendingPurchase', JSON.stringify(purchaseSessionData));
+                    
+                    // 2. Redirect the user to the PhonePe payment page
+                    if (res.redirectUrl) {
+                        window.location.href = res.redirectUrl;
+                    } else {
+                        this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
+                    }
+                } else {
+                    this.showErrorSnackbar('An unsupported payment gateway was returned.');
+                }
+            } else {
+                this.showErrorSnackbar(`Failed to create payment order. ${res.message || ''}`);
+            }
+        },
+        error: (err) => {
+            const errorMsg = err?.error?.message || 'Error creating payment order.';
+            this.showErrorSnackbar(errorMsg);
         }
-      },
-      error: (err) => {
-        const errorMsg = err?.error?.message || 'Error creating Razorpay order.';
-        this.showErrorSnackbar(errorMsg);
-      }
     });
-  }
+}
 
 
 
-  startRazorpaySignupPayment(order: any, purchaseId: any, data: any): void {
+
+
+
+
+
+
+
+  // startRazorpaySignupPayment(order: any, purchaseId: any, data: any): void {
+  //   const options = {
+  //     key: 'rzp_live_0cClDW4rSilf2w', // Use your live Razorpay key
+  //     amount: order.amount,
+  //     currency: order.currency,
+  //     name: 'Sunra Softech Pvt Ltd',
+  //     description: 'Plan Purchase',
+  //     order_id: order.id,
+  //     handler: (response: any) => {
+  //       this.verifySignupPurchasePayment(response, purchaseId, data);
+  //     },
+  //     prefill: {
+  //       name: data.name,
+  //       email: data.email,
+  //       contact: data.phone
+  //     },
+  //     notes: {
+  //       planId: data.pricing_popup_id
+  //     },
+  //     theme: { color: '#3399cc' }
+  //   };
+
+  //   const rzp = new Razorpay(options);
+  //   rzp.open();
+  // }
+
+
+
+
+  startRazorpaySignupPayment(order: any, key_id: string, purchaseId: any, data: any): void {
     const options = {
-      key: 'rzp_live_0cClDW4rSilf2w', // Use your live Razorpay key
-      amount: order.amount,
-      currency: order.currency,
-      name: 'Sunra Softech Pvt Ltd',
-      description: 'Plan Purchase',
-      order_id: order.id,
-      handler: (response: any) => {
-        this.verifySignupPurchasePayment(response, purchaseId, data);
-      },
-      prefill: {
-        name: data.name,
-        email: data.email,
-        contact: data.phone
-      },
-      notes: {
-        planId: data.pricing_popup_id
-      },
-      theme: { color: '#3399cc' }
+        // *** KEY CHANGE: Use the dynamic key from the backend ***
+        key: key_id, 
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Sunra Softech Pvt Ltd',
+        description: 'Plan Purchase',
+        order_id: order.id,
+        handler: (response: any) => {
+            // On success, this calls the verification function
+            this.verifySignupPurchasePayment(response, purchaseId, data);
+        },
+        prefill: {
+            name: data.name,
+            email: data.email,
+            contact: data.phone
+        },
+        notes: {
+            purchaseId: purchaseId, // Store our internal purchase ID
+            planId: data.pricing_popup_id
+        },
+        modal: {
+            ondismiss: () => {
+                // User closed the popup without paying.
+                // The 'pending' record already exists in the database, so we don't need to do anything here.
+                // You could optionally show a message.
+                this.showErrorSnackbar('Payment was cancelled.');
+            }
+        },
+        theme: { color: '#3399cc' }
     };
 
     const rzp = new Razorpay(options);
     rzp.open();
-  }
+}
+
+  // verifySignupPurchasePayment(response: any, purchaseId: any, data: any): void {
+  //   const payload = {
+  //     razorpay_order_id: response.razorpay_order_id,
+  //     razorpay_payment_id: response.razorpay_payment_id,
+  //     razorpay_signature: response.razorpay_signature
+  //   };
+
+  //   this.landingService.verifyRazorpayPayment(payload).subscribe({
+  //     next: (res) => {
+  //       if (res.status) {
+  //         // Add payment details to the purchase and update status to "paid"
+  //         data.payment_id = response.razorpay_payment_id;
+  //         this.updateUserPurchaseStatus(purchaseId, { payment_status: 'paid', payment_id: data.payment_id });
+  //         this.purchaseSuccessFlag = true;
+  //         this.showPurchaseStatusPopup = true;
+  //       } else {
+  //         this.showErrorSnackbar('Payment verification failed.');
+  //         this.purchaseSuccessFlag = false;
+  //         this.showPurchaseStatusPopup = true;
+  //       }
+  //     },
+  //     error: () => {
+  //       this.showErrorSnackbar('Payment verification failed.');
+  //     }
+  //   });
+  // }
+
+
 
   verifySignupPurchasePayment(response: any, purchaseId: any, data: any): void {
+    // *** KEY CHANGE: Create a payload for the generic verifyPayment endpoint ***
     const payload = {
-      razorpay_order_id: response.razorpay_order_id,
-      razorpay_payment_id: response.razorpay_payment_id,
-      razorpay_signature: response.razorpay_signature
+        gateway_name: 'razorpay', // We know this is razorpay because this function was called
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature
     };
 
-    this.landingService.verifyRazorpayPayment(payload).subscribe({
-      next: (res) => {
-        if (res.status) {
-          // Add payment details to the purchase and update status to "paid"
-          data.payment_id = response.razorpay_payment_id;
-          this.updateUserPurchaseStatus(purchaseId, { payment_status: 'paid', payment_id: data.payment_id });
-          this.purchaseSuccessFlag = true;
-          this.showPurchaseStatusPopup = true;
-        } else {
-          this.showErrorSnackbar('Payment verification failed.');
-          this.purchaseSuccessFlag = false;
-          this.showPurchaseStatusPopup = true;
+    // *** KEY CHANGE: Call the generic verifyPayment service method ***
+    this.landingService.verifyPayment(payload).subscribe({
+        next: (res) => {
+            if (res.status) {
+                // Verification successful, update the purchase record to "paid"
+                this.updateUserPurchaseStatus(purchaseId, { 
+                    payment_status: 'paid', 
+                    payment_id: response.razorpay_payment_id 
+                });
+                this.purchaseSuccessFlag = true;
+                this.showPurchaseStatusPopup = true;
+            } else {
+                this.showErrorSnackbar('Payment verification failed.');
+                this.purchaseSuccessFlag = false;
+                this.showPurchaseStatusPopup = true;
+            }
+        },
+        error: () => {
+            this.showErrorSnackbar('Payment verification failed.');
+            this.purchaseSuccessFlag = false;
+            this.showPurchaseStatusPopup = true;
         }
-      },
-      error: () => {
-        this.showErrorSnackbar('Payment verification failed.');
-      }
     });
-  }
+}
+
+
+
+
 
   updateUserPurchaseStatus(purchaseId: any, data: any): void {
     this.landingService.updateUserPurchaseStatus(purchaseId, data).subscribe({
