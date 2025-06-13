@@ -273,7 +273,8 @@
         </div>
 
         <!-- Mobile Icon -->
-        <div *ngIf="!showPricingPopup" class="home-icon" id="homeIcon" (click)="toggleSlider()">
+        <div *ngIf="!showPricingPopup" class="home-icon" id="homeIcon"
+            (click)="toggleSlider()">
             <img src="../../assets/Group 8.png" alt="Home Icon" />
         </div>
 
@@ -810,19 +811,19 @@
     </div>
 </div>
 
-
 <!-- ================== FILL FORM FIRST POPUP ================== -->
 <div *ngIf="showFillFormPopup" class="overlay" (click)="closeFillFormPopup()">
-    <div style="border: 2px solid white;" class="final-status-popup" (click)="$event.stopPropagation()">
+    <div style="border: 2px solid white;" class="final-status-popup"
+        (click)="$event.stopPropagation()">
         <h2>Information Required</h2>
         <p>
-            Please fill in your Full Name, Email, and Phone Number before proceeding to book an appointment.
+            Please fill in your Full Name, Email, and Phone Number before
+            proceeding to book an appointment.
         </p>
         <button class="ok-btn" (click)="closeFillFormPopup()">Okay</button>
     </div>
 </div>
 <!-- ================== END OF FILL FORM POPUP ================== -->
-
 
 <!-- Tech Expert Page -->
 <section id="tech-expert" *ngIf="!showPricingPopup">
@@ -950,6 +951,6 @@
         </div>
     </div>
     <div class="footer-bottom">
-        Copyright Reserved 2024
+        Copyright © 2024. All rights reserved. Managed by: SUNRA SOFT TECH PRIVATE LIMITED
     </div>
 </footer>
