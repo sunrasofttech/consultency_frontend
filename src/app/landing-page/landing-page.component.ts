@@ -648,48 +648,79 @@ export class LandingPageComponent implements OnInit {
    * This is the main function that starts the payment process.
    * It now calls the generic `createOrder` service method and handles the dynamic response.
    */
-  proceedToPayment(): void {
-    this.showConfirmPaymentPopup = false; // Close the confirmation popup
-    this.bookingLoading = true;           // Show a loading state on the button
+  // proceedToPayment(): void {
+  //   this.showConfirmPaymentPopup = false; // Close the confirmation popup
+  //   this.bookingLoading = true;           // Show a loading state on the button
 
-    // Call the new generic createOrder method from your service
-    this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
+  //   // Call the new generic createOrder method from your service
+  //   this.landingService.createOrder(this.pendingBookingData.amount).subscribe({
+  //     next: (res) => {
+  //       if (res.status) {
+  //         // --- THIS IS THE NEW DYNAMIC LOGIC ---
+  //         // Check which gateway the backend chose to use
+  //         if (res.gateway === 'razorpay') {
+  //           // If it's Razorpay, call the existing Razorpay payment handler
+  //           this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
+            
+  //         } else if (res.gateway === 'phonepe') {
+  //           // If it's PhonePe, the backend sent a redirectUrl.
+  //           // The only job of the frontend is to redirect the user.
+  //           if (res.redirectUrl) {
+  //             window.location.href = res.redirectUrl;
+  //           } else {
+  //             // Handle error if the URL is missing
+  //             this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
+  //             this.bookingLoading = false; // Stop the loading spinner
+  //           }
+  //         } else {
+  //           // Handle any other unknown gateways or errors
+  //           this.showErrorSnackbar('An unsupported payment gateway was returned.');
+  //           this.bookingLoading = false;
+  //         }
+  //       } else {
+  //         // Handle error response from your own backend (e.g., "No active gateway")
+  //         this.showErrorSnackbar(res.message || 'Error creating payment order.');
+  //         this.bookingLoading = false;
+  //       }
+  //     },
+  //     error: (err) => {
+  //       // Handle HTTP errors (e.g., server is down)
+  //       this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
+  //       this.bookingLoading = false;
+  //     }
+  //   });
+  // }
+
+
+  // This function that triggers the entire flow
+proceedToPayment(): void {
+    this.showConfirmPaymentPopup = false;
+    this.bookingLoading = true;
+
+    // The 'pendingBookingData' object already has name, email, phone, date, time, and amount.
+    // We send this whole object to the backend now.
+    this.landingService.createOrder(this.pendingBookingData).subscribe({
       next: (res) => {
         if (res.status) {
-          // --- THIS IS THE NEW DYNAMIC LOGIC ---
-          // Check which gateway the backend chose to use
           if (res.gateway === 'razorpay') {
-            // If it's Razorpay, call the existing Razorpay payment handler
             this.startRazorpayPayment(res.order, res.key_id, this.pendingBookingData);
-            
           } else if (res.gateway === 'phonepe') {
-            // If it's PhonePe, the backend sent a redirectUrl.
-            // The only job of the frontend is to redirect the user.
-            if (res.redirectUrl) {
-              window.location.href = res.redirectUrl;
-            } else {
-              // Handle error if the URL is missing
-              this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
-              this.bookingLoading = false; // Stop the loading spinner
-            }
+            window.location.href = res.redirectUrl;
           } else {
-            // Handle any other unknown gateways or errors
-            this.showErrorSnackbar('An unsupported payment gateway was returned.');
+            this.showErrorSnackbar('Unsupported payment gateway.');
             this.bookingLoading = false;
           }
         } else {
-          // Handle error response from your own backend (e.g., "No active gateway")
           this.showErrorSnackbar(res.message || 'Error creating payment order.');
           this.bookingLoading = false;
         }
       },
       error: (err) => {
-        // Handle HTTP errors (e.g., server is down)
         this.showErrorSnackbar(err || 'A server error occurred while initiating payment.');
         this.bookingLoading = false;
       }
     });
-  }
+}
 
 
 
