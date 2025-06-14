@@ -340,11 +340,11 @@
         <!-- Loop through banners -->
         <ng-container *ngFor="let banner of banners; let i = index">
             <video
+                #videoRef
                 *ngIf="banner.type === 'video' && banner.file_url"
                 [src]="baseUrl + banner.file_url"
                 class="slider-video"
                 [class.active]="i === currentIndex"
-                autoplay
                 controls
                 loop
                 playsinline
@@ -951,6 +951,7 @@
         </div>
     </div>
     <div class="footer-bottom">
-        Copyright © 2024. All rights reserved. Managed by: SUNRA SOFT TECH PRIVATE LIMITED
+        Copyright © 2024. All rights reserved. Managed by: SUNRA SOFT TECH
+        PRIVATE LIMITED
     </div>
 </footer>

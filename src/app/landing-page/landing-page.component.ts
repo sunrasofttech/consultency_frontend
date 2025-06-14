@@ -347,16 +347,23 @@ export class LandingPageComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    this.videoRefs.forEach(videoEl => {
-      const video = videoEl.nativeElement;
-      video.muted = false;
-      video.autoplay = true;
-      video.loop = true;
-      video.play().catch(err => console.warn('Autoplay error:', err));
-    });
+    // this.videoRefs.forEach(videoEl => {
+    //   const video = videoEl.nativeElement;
+    //   video.muted = false;
+    //   video.autoplay = true;
+    //   video.loop = true;
+    //   video.play().catch(err => console.warn('Autoplay error:', err));
+    // });
+
+    setTimeout(() => {
+      this.playCurrentVideo(true);
+    }, 100); // A small delay can help prevent race conditions
+
+    // Your existing isPlaying logic can be simplified or removed if not used for a UI toggle
+    this.isPlaying = this.banners.map((_, index) => index === this.currentIndex);
 
     // Initialize playing state
-    this.isPlaying = this.banners.map(() => true);
+    // this.isPlaying = this.banners.map(() => true);
   }
 
   togglePlayPause(index: number): void {
@@ -1331,21 +1338,55 @@ export class LandingPageComponent implements OnInit {
   /**
    * Plays the currently active video.
    */
-  playCurrentVideo(): void {
-    const currentVideoElement = this.getVideoElementByIndex(this.currentIndex);
-    if (currentVideoElement) {
-      // Mute before playing programmatically if needed, as browsers often block unmuted autoplay
-      currentVideoElement.muted = true; // Or ensure controls allow unmuting
-      currentVideoElement.play().then(() => {
+  // playCurrentVideo(): void {
+  //   const currentVideoElement = this.getVideoElementByIndex(this.currentIndex);
+  //   if (currentVideoElement) {
+  //     // Mute before playing programmatically if needed, as browsers often block unmuted autoplay
+  //     currentVideoElement.muted = true; // Or ensure controls allow unmuting
+  //     currentVideoElement.play().then(() => {
+  //       // console.log(`Playing video at index ${this.currentIndex}`);
+  //     }).catch(error => {
+  //       // console.warn(`Autoplay prevented for video index ${this.currentIndex}: `, error);
+  //       // You might want to show a play button overlay here if autoplay fails
+  //     });
+  //   } else {
+  //     // console.log("Video element not found for index:", this.currentIndex);
+  //   }
+  // }
+
+
+  /**
+ * Plays the currently active video.
+ * @param isInitialLoad - If true, the video will be muted to ensure autoplay works on page load.
+ */
+playCurrentVideo(isInitialLoad: boolean = false): void { // <-- Add parameter with a default
+  const currentVideoElement = this.getVideoElementByIndex(this.currentIndex);
+  if (currentVideoElement) {
+    // Set muted based on whether it's the first load or a user click
+    currentVideoElement.muted = isInitialLoad; 
+
+    const playPromise = currentVideoElement.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
         // console.log(`Playing video at index ${this.currentIndex}`);
       }).catch(error => {
         // console.warn(`Autoplay prevented for video index ${this.currentIndex}: `, error);
-        // You might want to show a play button overlay here if autoplay fails
+        // If unmuted playback fails, try again muted as a fallback
+        if (!currentVideoElement.muted) {
+            currentVideoElement.muted = true;
+            currentVideoElement.play();
+        }
       });
-    } else {
-      // console.log("Video element not found for index:", this.currentIndex);
     }
+  } else {
+    // console.log("Video element not found for index:", this.currentIndex);
   }
+}
+
+
+
+
 
   /**
    * Helper to get the native video element from the QueryList by index.
@@ -2102,8 +2143,8 @@ export class LandingPageComponent implements OnInit {
     this.closePriceConfirmPopup(); // Close confirmation popup first
 
     if (!this.createdPurchaseId || !this.createdPurchaseData) {
-        this.showErrorSnackbar('No purchase data found. Please submit the form again.');
-        return;
+      this.showErrorSnackbar('No purchase data found. Please submit the form again.');
+      return;
     }
 
     // Use the price stored in createdPurchaseData for the payment
@@ -2111,44 +2152,44 @@ export class LandingPageComponent implements OnInit {
 
     // *** KEY CHANGE: Call the generic createOrder service method ***
     this.landingService.createOrder(paymentAmount).subscribe({
-        next: (res) => {
-            if (res.status) {
-                // --- DYNAMIC GATEWAY LOGIC ---
-                if (res.gateway === 'razorpay') {
-                    // If Razorpay is active, start the Razorpay popup flow
-                    // Pass the dynamic key_id from the backend response
-                    this.startRazorpaySignupPayment(res.order, res.key_id, this.createdPurchaseId, this.createdPurchaseData);
+      next: (res) => {
+        if (res.status) {
+          // --- DYNAMIC GATEWAY LOGIC ---
+          if (res.gateway === 'razorpay') {
+            // If Razorpay is active, start the Razorpay popup flow
+            // Pass the dynamic key_id from the backend response
+            this.startRazorpaySignupPayment(res.order, res.key_id, this.createdPurchaseId, this.createdPurchaseData);
 
-                } else if (res.gateway === 'phonepe') {
-                    // If PhonePe is active, prepare for redirect
-                    
-                    // 1. Store the necessary purchase info in session storage.
-                    //    This is how we'll remember what to update when the user returns.
-                    const purchaseSessionData = {
-                        purchaseId: this.createdPurchaseId,
-                        purchaseData: this.createdPurchaseData
-                    };
-                    sessionStorage.setItem('pendingPurchase', JSON.stringify(purchaseSessionData));
-                    
-                    // 2. Redirect the user to the PhonePe payment page
-                    if (res.redirectUrl) {
-                        window.location.href = res.redirectUrl;
-                    } else {
-                        this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
-                    }
-                } else {
-                    this.showErrorSnackbar('An unsupported payment gateway was returned.');
-                }
+          } else if (res.gateway === 'phonepe') {
+            // If PhonePe is active, prepare for redirect
+
+            // 1. Store the necessary purchase info in session storage.
+            //    This is how we'll remember what to update when the user returns.
+            const purchaseSessionData = {
+              purchaseId: this.createdPurchaseId,
+              purchaseData: this.createdPurchaseData
+            };
+            sessionStorage.setItem('pendingPurchase', JSON.stringify(purchaseSessionData));
+
+            // 2. Redirect the user to the PhonePe payment page
+            if (res.redirectUrl) {
+              window.location.href = res.redirectUrl;
             } else {
-                this.showErrorSnackbar(`Failed to create payment order. ${res.message || ''}`);
+              this.showErrorSnackbar('Could not get payment URL from PhonePe. Please try again.');
             }
-        },
-        error: (err) => {
-            const errorMsg = err?.error?.message || 'Error creating payment order.';
-            this.showErrorSnackbar(errorMsg);
+          } else {
+            this.showErrorSnackbar('An unsupported payment gateway was returned.');
+          }
+        } else {
+          this.showErrorSnackbar(`Failed to create payment order. ${res.message || ''}`);
         }
+      },
+      error: (err) => {
+        const errorMsg = err?.error?.message || 'Error creating payment order.';
+        this.showErrorSnackbar(errorMsg);
+      }
     });
-}
+  }
 
 
 
@@ -2190,40 +2231,40 @@ export class LandingPageComponent implements OnInit {
 
   startRazorpaySignupPayment(order: any, key_id: string, purchaseId: any, data: any): void {
     const options = {
-        // *** KEY CHANGE: Use the dynamic key from the backend ***
-        key: key_id, 
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Sunra Softech Pvt Ltd',
-        description: 'Plan Purchase',
-        order_id: order.id,
-        handler: (response: any) => {
-            // On success, this calls the verification function
-            this.verifySignupPurchasePayment(response, purchaseId, data);
-        },
-        prefill: {
-            name: data.name,
-            email: data.email,
-            contact: data.phone
-        },
-        notes: {
-            purchaseId: purchaseId, // Store our internal purchase ID
-            planId: data.pricing_popup_id
-        },
-        modal: {
-            ondismiss: () => {
-                // User closed the popup without paying.
-                // The 'pending' record already exists in the database, so we don't need to do anything here.
-                // You could optionally show a message.
-                this.showErrorSnackbar('Payment was cancelled.');
-            }
-        },
-        theme: { color: '#3399cc' }
+      // *** KEY CHANGE: Use the dynamic key from the backend ***
+      key: key_id,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Sunra Softech Pvt Ltd',
+      description: 'Plan Purchase',
+      order_id: order.id,
+      handler: (response: any) => {
+        // On success, this calls the verification function
+        this.verifySignupPurchasePayment(response, purchaseId, data);
+      },
+      prefill: {
+        name: data.name,
+        email: data.email,
+        contact: data.phone
+      },
+      notes: {
+        purchaseId: purchaseId, // Store our internal purchase ID
+        planId: data.pricing_popup_id
+      },
+      modal: {
+        ondismiss: () => {
+          // User closed the popup without paying.
+          // The 'pending' record already exists in the database, so we don't need to do anything here.
+          // You could optionally show a message.
+          this.showErrorSnackbar('Payment was cancelled.');
+        }
+      },
+      theme: { color: '#3399cc' }
     };
 
     const rzp = new Razorpay(options);
     rzp.open();
-}
+  }
 
   // verifySignupPurchasePayment(response: any, purchaseId: any, data: any): void {
   //   const payload = {
@@ -2257,36 +2298,36 @@ export class LandingPageComponent implements OnInit {
   verifySignupPurchasePayment(response: any, purchaseId: any, data: any): void {
     // *** KEY CHANGE: Create a payload for the generic verifyPayment endpoint ***
     const payload = {
-        gateway_name: 'razorpay', // We know this is razorpay because this function was called
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature
+      gateway_name: 'razorpay', // We know this is razorpay because this function was called
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
     };
 
     // *** KEY CHANGE: Call the generic verifyPayment service method ***
     this.landingService.verifyPayment(payload).subscribe({
-        next: (res) => {
-            if (res.status) {
-                // Verification successful, update the purchase record to "paid"
-                this.updateUserPurchaseStatus(purchaseId, { 
-                    payment_status: 'paid', 
-                    payment_id: response.razorpay_payment_id 
-                });
-                this.purchaseSuccessFlag = true;
-                this.showPurchaseStatusPopup = true;
-            } else {
-                this.showErrorSnackbar('Payment verification failed.');
-                this.purchaseSuccessFlag = false;
-                this.showPurchaseStatusPopup = true;
-            }
-        },
-        error: () => {
-            this.showErrorSnackbar('Payment verification failed.');
-            this.purchaseSuccessFlag = false;
-            this.showPurchaseStatusPopup = true;
+      next: (res) => {
+        if (res.status) {
+          // Verification successful, update the purchase record to "paid"
+          this.updateUserPurchaseStatus(purchaseId, {
+            payment_status: 'paid',
+            payment_id: response.razorpay_payment_id
+          });
+          this.purchaseSuccessFlag = true;
+          this.showPurchaseStatusPopup = true;
+        } else {
+          this.showErrorSnackbar('Payment verification failed.');
+          this.purchaseSuccessFlag = false;
+          this.showPurchaseStatusPopup = true;
         }
+      },
+      error: () => {
+        this.showErrorSnackbar('Payment verification failed.');
+        this.purchaseSuccessFlag = false;
+        this.showPurchaseStatusPopup = true;
+      }
     });
-}
+  }
 
 
 
