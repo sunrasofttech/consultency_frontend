@@ -373,8 +373,20 @@
         [disabled]="banners.length < 2">❯</button>
 </section>
 
+
+<section class="hero custom-hero" *ngIf="!showPricingPopup">
+  <div class="hero-layout-row custom-hero-row">
+    <button class="hero-cta custom-hero-btn" (click)="scrollToSection($event, '#contact')">
+      <span class="hero-cta-text custom-hero-btn-text">{{ buttonText }}</span>
+    </button>
+  </div>
+</section>
+
+
+
+
 <!-- Features Section -->
-<section id="features" *ngIf="!showPricingPopup">
+<section id="features" *ngIf="!showPricingPopup" style="margin-top: 50px;">
     <div *ngIf="features.length > 0" class="feature-header">
         <h2>{{ features[0]?.heading }}</h2>
         <p>{{ features[0]?.subheading }}</p>
