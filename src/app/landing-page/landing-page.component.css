@@ -4955,3 +4955,29 @@ button.mat-button {
         /* Removes the large desktop stagger effect */
     }
 }
+
+
+/* Only affects this section */
+.custom-hero {
+  margin-top: 45px; /* default for mobile */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Larger screens override */
+@media screen and (min-width: 1024px) {
+  .custom-hero {
+    margin-top: 10px;
+  }
+}
+
+/* Optional: overrides or additions for the row/button */
+.custom-hero-row {
+  justify-content: center;
+}
+
+.custom-hero-btn {
+  /* Add extra button styles here if needed */
+}
