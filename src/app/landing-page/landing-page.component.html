@@ -1,719 +1,980 @@
-<!-- Navbar Container -->
-<div class="navbar-container">
+<!-- ================= NAVBAR SECTION ================= -->
 
-    <header class="navbar">
-        <div class="logo-container">
-            <img
-                *ngIf="brandLogoUrl"
-                [src]="brandLogoUrl"
-                alt="Logo"
-                class="logo-img" />
+<section class="navbar-section">
 
-            <div class="logo">
-                <span>{{ brandDetails?.brandName || 'textexpert' }}</span>
-            </div>
-        </div>
+<nav class="custom-navbar">
 
-        <ul class="nav-links" id="navLinks" *ngIf="!isMobile">
-            <li *ngFor="let item of navbarOptions">
-                <a
-                    href="{{ item.url || '#' }}"
-                    [ngClass]="{ 'pricing-btn': item.type === 'button' }"
-                    (click)="onNavLinkClick($event, item)">
-                    {{ item.name }}
-                </a>
-            </li>
-        </ul>
+<div class="logo">
 
-        <!-- ================== PRICING POPUP ================== -->
-        <div
-            class="pricing-popup-overlay"
-            *ngIf="showPricingPopup"
-            (click)="closePricingPopup()"> <!-- Click outside content closes -->
-            <div class="pricing-popup-content"
-                (click)="$event.stopPropagation()">
-                <!-- Click inside content stops closing -->
+<img
+*ngIf="brandLogoUrl"
+[src]="brandLogoUrl"
+/>
 
-                <!-- Explicit Close Button -->
-                <button class="close-price-popup-btn"
-                    (click)="closePricingPopup()">×</button>
+<span>
 
-                <!-- Heading -->
-                <h1 class="price-heading"
-                    *ngIf="!pricingLoading && !pricingError && pricingPlans.length > 0">Pricing</h1>
+{{brandDetails?.brandName}}
 
-                <!-- Loading State -->
-                <div *ngIf="pricingLoading" class="loading-indicator">
-                    Loading Pricing Plans...
-                </div>
-
-                <!-- Error State -->
-                <div *ngIf="pricingError && !pricingLoading"
-                    class="error-message">
-                    {{ pricingError }}
-                </div>
-
-                <!-- Pricing Cards Container -->
-                <div class="pricing-container"
-                    *ngIf="!pricingLoading && !pricingError && pricingPlans.length > 0">
-
-                    <!-- <div class="card"
-                        *ngFor="let plan of pricingPlans; let i = index"
-                        [class.highlight-card]="i === 1">
-                       
-                        <h2>{{ plan.title }}</h2>
-                        <p>{{ plan.subtitle }}</p>
-                        <h3><span class="currency-symbol">₹</span>{{ plan.price
-                            | number:'1.0-0' }}</h3> -->
-
-                    <div class="card"
-                        *ngFor="let plan of pricingPlans; let i = index"
-                        [class.highlight-card]="i === 1"
-                        [class.discounted-plan]="plan.is_discounted">
-                        <!-- Optional class -->
-
-                        <h2>{{ plan.title }}</h2>
-                        <p>{{ plan.subtitle }}</p>
-
-                        <!-- Show original price crossed out if discounted -->
-                        <h3 *ngIf="plan.is_discounted" class="discounted-price">
-                            <span>
-                                <span class="currency-symbol">₹</span>{{
-                                plan.price | number:'1.0-0' }}
-                            </span>
-                        </h3>
-
-                        <!-- Show regular price if not discounted -->
-                        <h3 *ngIf="!plan.is_discounted">
-                            <span class="currency-symbol">₹</span>{{ plan.price
-                            | number:'1.0-0' }}
-                        </h3>
-
-                        <button
-                            (click)="selectPlanAndOpenSignup(plan); $event.stopPropagation()">
-                            {{ plan.button_text }}
-                        </button>
-
-                        <div class="features">
-                            <ul>
-                                <ng-container
-                                    *ngFor="let feature of plan.features; let isLast = last">
-                                    <li>
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 20 20"
-                                            height="20" width="20">
-                                            <!-- Use a contrasting fill for the checkmark background -->
-                                            <rect fill="#333" rx="10"
-                                                height="20" width="20"></rect>
-                                            <!-- Darker Gray example -->
-                                            <path stroke-linejoin="round"
-                                                stroke-linecap="round"
-                                                stroke-width="2"
-                                                stroke="#a580ff"
-                                                d="M6 10.5L9 13L14 7"></path>
-                                            <!-- Purple check -->
-                                        </svg>
-                                        <span>{{ feature.feature_name }}</span>
-                                    </li>
-                                    <hr *ngIf="!isLast" />
-                                </ng-container>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- No Plans Message -->
-                <div
-                    *ngIf="!pricingLoading && !pricingError && pricingPlans.length === 0">
-                    No pricing plans available at the moment.
-                </div>
-
-            </div>
-        </div>
-        <!-- ================== END OF PRICING POPUP ================== -->
-
-        <!-- ================== SIGNUP FORM ================== -->
-        <!-- Removed overlay click handler IF you ONLY want explicit close -->
-        <div class="signup-form-overlay" *ngIf="showSignupForm">
-            <!-- Stop propagation prevents clicks inside from closing the overlay -->
-            <div class="signup-form-content" (click)="$event.stopPropagation()">
-                <!-- Close button -->
-                <button class="close-signup-btn" (click)="closeSignupForm()"
-                    aria-label="Close Signup Form">
-                    × <!-- Use HTML entity for 'x' -->
-                </button>
-
-                <h2>Fill Your Details</h2> <!-- Changed heading slightly -->
-
-                <form (ngSubmit)="onSignupFormSubmit()" novalidate>
-                    <!-- Kept original ngSubmit -->
-                    <div class="form-group">
-                        <label for="signupName">Name</label>
-                        <!-- Changed id slightly for uniqueness -->
-                        <input type="text" id="signupName"
-                            placeholder="Enter your full name"
-                            [(ngModel)]="signupData.name" name="name"
-                            required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signupEmail">Email</label>
-                        <!-- Changed id slightly -->
-                        <input type="email" id="signupEmail"
-                            placeholder="you@example.com"
-                            [(ngModel)]="signupData.email" name="email"
-                            required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signupPhone">Phone</label>
-                        <!-- Changed id slightly -->
-                        <input type="tel" id="signupPhone"
-                            placeholder="Your phone number (e.g., 9123456780)"
-                            [(ngModel)]="signupData.phone" name="phone"
-                            required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signupProjectName">Project Name</label>
-                        <!-- Changed id slightly -->
-                        <input type="text" id="signupProjectName"
-                            placeholder="Brief name for your project"
-                            [(ngModel)]="signupData.project_name"
-                            name="project_name"
-                            required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signupProjectDescription">Project
-                            Description</label> <!-- Changed id slightly -->
-                        <textarea id="signupProjectDescription"
-                            placeholder="Describe your project needs"
-                            [(ngModel)]="signupData.project_description"
-                            name="project_description"
-                            rows="4" required></textarea>
-                    </div>
-
-                    <!-- Button container -->
-                    <!-- <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Submit
-                            Details</button> 
-                        <button type="button" class="btn btn-secondary"
-                            (click)="closeSignupForm()">Cancel</button>
-                    </div> -->
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary"
-                            [disabled]="isSignupSubmitting">
-                            <span *ngIf="isSignupSubmitting"
-                                class="spinner-border spinner-border-sm"
-                                role="status" aria-hidden="true"></span>
-                            <!-- Optional: for a visual spinner -->
-                            {{ isSignupSubmitting ? 'Submitting...' :
-                            'Submit Details' }}
-                        </button>
-                        <button type="button" class="btn btn-secondary"
-                            (click)="closeSignupForm()"
-                            [disabled]="isSignupSubmitting">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <!-- ================== END OF SIGNUP FORM ================== -->
-
-        <!-- ================== Price Popup Payment Confirmation Popup  ================== -->
-        <div *ngIf="showConfirmPricePaymentPopup" class="overlay"
-            (click)="closePriceConfirmPopup()">
-            <div class="confirm-popup" (click)="$event.stopPropagation()">
-                <h2>Confirm Subscription</h2>
-                <p>
-                    Proceed to pay ₹{{ packageAmount }} for
-                    <strong>{{ selectedPlanTitle }}</strong> plan?
-                </p>
-
-                <button class="confirm-btn"
-                    (click)="proceedToSignupPurchasePayment()">Proceed
-                    to
-                    Pay</button>
-                <button class="cancel-btn"
-                    (click)="closePriceConfirmPopup()">Cancel</button>
-            </div>
-        </div>
-
-        <!--  ==================Price Popup Payment Confirmation Popup ================== -->
-
-        <!-- Plan Purchase Status Popup -->
-        <div *ngIf="showPurchaseStatusPopup" class="overlay"
-            (click)="closePurchaseStatusPopup()">
-            <div class="final-status-popup" (click)="$event.stopPropagation()">
-                <h2>{{ purchaseSuccessFlag ? 'Purchase Successful!' :
-                    'Purchase Failed' }}</h2>
-                <p>
-                    {{ purchaseSuccessFlag
-                    ?
-                    '🎉 Your plan has been successfully purchased! Check your email for details and next steps.'
-                    :
-                    '⚠️ Payment failed. Please try again or contact support if the issue persists.'
-                    }}
-                </p>
-                <button class="ok-btn"
-                    (click)="closePurchaseStatusPopup()">Okay</button>
-            </div>
-        </div>
-
-        <!-- Mobile Slider Menu -->
-        <div class="mobile-slider" [class.open]="isSliderOpen">
-            <ul>
-                <li *ngFor="let item of navbarOptions">
-                    <a href="{{ item.url || '#' }}"
-                        (click)="onNavLinkClick($event, item)">
-                        {{ item.name }}
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Mobile Icon -->
-        <div *ngIf="!showPricingPopup" class="home-icon" id="homeIcon"
-            (click)="toggleSlider()">
-            <img src="../../assets/Group 8.png" alt="Home Icon" />
-        </div>
-
-    </header>
+</span>
 
 </div>
 
-<div class="mask-group-container" *ngIf="!showPricingPopup">
-    <img *ngIf="icon_1_url" [src]="icon_1_url" alt="Icon 1"
-        class="hero_maskGroup" />
-    <img *ngIf="icon_2_url" [src]="icon_2_url" alt="Icon 2"
-        class="hero_maskGroup second-image" />
+
+<ul class="nav-links">
+
+<li
+*ngFor="
+let item of navbarOptions
+"
+>
+
+<a [href]="item.url">
+
+{{item.name}}
+
+</a>
+
+</li>
+
+</ul>
+
+
+<button class="start-btn">
+
+Get Started
+
+</button>
+
+
+<button
+class="mobile-btn"
+(click)="toggleMenu()"
+>
+
+☰
+
+</button>
+
+</nav>
+
+
+<div
+class="mobile-menu"
+[class.active]="menuOpen"
+>
+
+<a
+*ngFor="
+let item of navbarOptions
+"
+[href]="item.url"
+>
+
+{{item.name}}
+
+</a>
+
 </div>
 
-<section class="hero" *ngIf="!showPricingPopup"
-    style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-    <h1 class="hero-heading">
-
-        <span class="gradient-text">{{ headingLine1 }}</span><br />
-        <span class="gradient-text">{{ headingLine2 }}</span>
-
-    </h1>
-    <p class="hero-subheading">{{ subheading }}</p>
-    <div class="hero-layout-row">
-        <img *ngIf="icon_3_url" [src]="icon_3_url" alt="Icon 3"
-            class="icon-left" />
-
-        <button class="hero-cta" (click)="scrollToSection($event, '#contact')">
-            <span class="hero-cta-text">{{ buttonText }}</span>
-        </button>
-        <img *ngIf="icon_4_url" [src]="icon_4_url" alt="Icon 4"
-            class="icon-right" />
-    </div>
-</section>
-
-<!-- <section class="slider" *ngIf="!showPricingPopup">
-    <button class="prev">&#10094;</button>
-    <div class="slider-container">
-        <ng-container *ngFor="let banner of banners let i = index">
-            <video
-                #videoRef
-                *ngIf="banner.type === 'video'"
-                [src]="baseUrl + banner.file_url"
-                class="slider-video"
-                controls
-                loop
-                playsinline
-                preload="auto"
-                autoplay>
-            </video>
-        </ng-container>
-
-    </div>
-    <button class="next">&#10095;</button>
-</section> -->
-
-<section class="slider" *ngIf="!showPricingPopup && banners.length > 0">
-    <!-- Previous Button -->
-    <button class="prev" (click)="prevSlide()"
-        [disabled]="banners.length < 2">❮</button>
-
-    <div class="slider-container">
-        <!-- Loop through banners -->
-        <ng-container *ngFor="let banner of banners; let i = index">
-            <video
-                #videoRef
-                *ngIf="banner.type === 'video' && banner.file_url"
-                [src]="baseUrl + banner.file_url"
-                class="slider-video"
-                [class.active]="i === currentIndex"
-                controls
-                loop
-                playsinline
-                muted
-                preload="auto">
-                Your browser does not support the video tag.
-            </video>
-
-            <!-- YouTube Video -->
-            <iframe
-                *ngIf="banner.type === 'video' && banner.youtube_url"
-                [src]="sanitizeUrl(banner.youtube_url)"
-                class="slider-video"
-                [class.active]="i === currentIndex"
-                frameborder="0"
-                controls
-                loop
-                playsinline>
-                Your browser does not support the video tag.
-            </iframe>
-        </ng-container>
-    </div>
-
-    <!-- Next Button -->
-    <button class="next" (click)="nextSlide()"
-        [disabled]="banners.length < 2">❯</button>
-</section>
-
-
-<section class="hero custom-hero" *ngIf="!showPricingPopup">
-  <div class="hero-layout-row custom-hero-row">
-    <button class="hero-cta custom-hero-btn" (click)="scrollToSection($event, '#contact')">
-      <span class="hero-cta-text custom-hero-btn-text">{{ buttonText }}</span>
-    </button>
-  </div>
 </section>
 
 
 
+<!-- ================= HERO SECTION ================= -->
 
-<!-- Features Section -->
-<section id="features" *ngIf="!showPricingPopup" style="margin-top: 50px;">
-    <div *ngIf="features.length > 0" class="feature-header">
-        <h2>{{ features[0]?.heading }}</h2>
-        <p>{{ features[0]?.subheading }}</p>
-    </div>
+<section class="hero-section">
 
-    <div class="feature-items">
-        <div *ngFor="let feature of features" class="feature-card-wrapper">
-            <div class="feature-card">
-                <div class="icon-circle">
-                    <img *ngIf="feature.icon_url"
-                        [src]="baseUrl + feature.icon_url" alt="Feature Icon" />
-                </div>
-            </div>
-            <p class="feature-label">{{ feature.label }}</p>
-        </div>
-    </div>
-</section>
+<div class="bg-overlay"></div>
 
-<section id="about" *ngIf="!showPricingPopup">
-    <div class="about-container">
-        <div class="about-text">
-            <h2>{{ aboutPageData.heading }}</h2>
-            <div class="about-text-desc" style="color: #B5B5B5;"
-                [innerHTML]="aboutPageData.formattedDescription"></div>
-        </div>
+<div class="hero-content">
 
-        <div class="about-image-wrapper" *ngIf="aboutPageData.image_url">
-            <div class="about-image">
-                <div class="red-bg"></div>
-                <img [src]="baseUrl + aboutPageData.image_url"
-                    alt="About Image" />
-            </div>
+<h1>
 
-            <div class="experience-box">
-                <div class="experience-content">
-                    <span class="experience-count">{{
-                        aboutPageData.experience_count }}+</span>
-                    <span class="experience-label">{{
-                        aboutPageData.experience_label }}</span>
-                </div>
+{{headingLine1}}
 
-                <div class="user-badges">
-                    <div class="badge1">R</div>
-                    <div class="badge2">T</div>
-                    <div class="badge3">U</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<br>
 
-<!-- Clients Section -->
-<section id="clients" *ngIf="!showPricingPopup">
-    <div class="client-text">
-        <h2>{{ clientHeading }}</h2>
-        <p>{{ clientSubheading }}</p>
-    </div>
+<span>
 
-    <div class="client-logos-wrapper">
+{{headingLine2}}
 
-        <div class="client-logos row row-one">
-            <img *ngFor="let logo of clientLogos" [src]="logo"
-                alt="Client Logo" />
-            <img *ngFor="let logo of clientLogos" [src]="logo"
-                alt="Client Logo" />
-        </div>
+</span>
 
-        <div class="client-logos row row-two">
-            <img *ngFor="let logo of clientLogos" [src]="logo"
-                alt="Client Logo" />
-            <img *ngFor="let logo of clientLogos" [src]="logo"
-                alt="Client Logo" />
-        </div>
-    </div>
-</section>
+</h1>
 
-<section id="process" class="process-section" *ngIf="!showPricingPopup">
-    <h2 class="section-title">How It Works</h2>
 
-    <div class="timeline-grid">
+<p>
 
-        <!-- Row 1 -->
-        <div class="timeline-row">
-            <div
-                *ngFor="let step of groupedProcessSteps[0]; let i = index"
-                class="timeline-item"
-                [attr.data-step]="i + 1">
-                <div class="step-content">
-                    <div class="step-icon-box">
-                        <img [src]="baseUrl + step.icon_url" alt="Icon"
-                            class="step-icon" />
-                    </div>
-                    <div class="step-text">
-                        <h3>{{ step.title }}</h3>
-                        <ul>
-                            <li *ngFor="let point of step.points">{{
-                                point.point_text }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+{{subheading}}
 
-        <!-- Horizontal Step Numbers (desktop only) -->
-        <div class="timeline-numbers">
-            <ng-container *ngFor="let step of processSteps; let i = index">
-                <div class="step-number-box">
-                    <div class="circle-number">{{ i + 1 }}</div>
-                    <div *ngIf="i < processSteps.length - 1"
-                        class="step-line"></div>
-                </div>
-            </ng-container>
-        </div>
+</p>
 
-        <!-- Row 2 -->
-        <div class="timeline-row staggered">
-            <div
-                *ngFor="let step of groupedProcessSteps[1]; let i = index"
-                class="timeline-item"
-                [attr.data-step]="groupedProcessSteps[0].length + i + 1">
-                <div class="step-content">
-                    <div class="step-icon-box">
-                        <img [src]="baseUrl + step.icon_url" alt="Icon"
-                            class="step-icon" />
-                    </div>
-                    <div class="step-text">
-                        <h3>{{ step.title }}</h3>
-                        <ul>
-                            <li *ngFor="let point of step.points">{{
-                                point.point_text }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-    </div>
-</section>
+<div class="video-box">
 
-<!-- <section id="video-section" *ngIf="videoSections.length > 0 && !showPricingPopup " >
-    <h2>Lets See How We Build This.</h2>
+<div
+id="heroCarousel"
+class="carousel slidee"
+data-bs-ride="carousel"
+>
 
-    
-    <div class="video-section-videos" >
+<div class="carousel-inner">
 
-      
-        <div *ngFor="let video of videoSections" class="video-item-container">
+<div
+class="carousel-item"
+*ngFor="
+let banner of banners;
+let i=index
+"
+[class.active]="i===0"
+>
 
-           
-            <ng-container *ngIf="video.youtube_link; else showUploadedVideo">
-              
-                <iframe
-                    *ngIf="sanitizeYoutubeUrl(video.youtube_link) as safeUrl"
-                    class="video-player"
-                    [src]="safeUrl"
-                    [title]="video.title || 'YouTube video player'"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
-                </iframe>
-              
-                <div *ngIf="!sanitizeYoutubeUrl(video.youtube_link)" class="video-placeholder">
-                   Invalid YouTube Link
-                </div>
-            </ng-container>
+<video
+*ngIf="
+banner.type==='video'
+"
+controls
+playsinline
+preload="metadata"
+>
 
-           
-            <ng-template #showUploadedVideo>
-                <ng-container *ngIf="video.video_file; else noVideoSource">
-                
-                    <video
-                        class="video-player"
-                        controls
-                        preload="metadata">
-                       
-                        <source [src]="baseUrl + video.video_file" type="video/mp4" />
-                        Your browser doesn't support HTML5 video.
-                    </video>
-                </ng-container>
-            </ng-template>
+<source
+[src]="
+getVideoUrl(
+banner.file_url
+)
+"
+type="video/mp4"
+/>
 
-      
-             <ng-template #noVideoSource>
-                
-             </ng-template>
+</video>
 
-          
-
-        </div> 
-    </div> 
-</section> -->
-
-<section id="video-section"
-    *ngIf="videoSections.length > 0 && !showPricingPopup ">
-    <h2>Lets See How We Build This.</h2>
-
-    <!-- Container for the video players -->
-    <div class="video-section-videos">
-
-        <!-- Loop through each video -->
-        <div *ngFor="let video of videoSections" class="video-item-container">
-
-            <!-- Check if it's a YouTube link -->
-            <ng-container *ngIf="video.youtube_link; else showUploadedVideo">
-                <!-- Display YouTube Embed using iframe -->
-                <iframe
-                    *ngIf="sanitizeYoutubeUrl(video.youtube_link) as safeUrl"
-                    class="video-player"
-                    [src]="safeUrl"
-                    [title]="video.title || 'YouTube video player'"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
-                </iframe>
-                <!-- Show if YouTube link is invalid -->
-                <div *ngIf="!sanitizeYoutubeUrl(video.youtube_link)"
-                    class="video-placeholder">
-                    Invalid YouTube Link
-                </div>
-            </ng-container>
-
-            <!-- If not YouTube, check for an uploaded video file -->
-            <ng-template #showUploadedVideo>
-                <ng-container *ngIf="video.video_file; else noVideoSource">
-                    <!-- Display Uploaded Video using video tag -->
-                    <video
-                        class="video-player"
-                        controls
-                        preload="metadata">
-                        <!-- Construct the full URL for the video file -->
-                        <source [src]="baseUrl + video.video_file"
-                            type="video/mp4" />
-                        Your browser doesn't support HTML5 video.
-                    </video>
-                </ng-container>
-            </ng-template>
-
-            <!-- If neither YouTube nor uploaded file exists -->
-            <ng-template #noVideoSource>
-                <!-- <div class="video-placeholder">
-                    No video source for "{{ video.title || 'this item' }}".
-                 </div> -->
-            </ng-template>
-
-            <!-- Display the title below the video -->
-            <!-- <p class="video-title">{{ video.title }}</p> -->
-
-        </div> <!-- End video-item-container -->
-    </div> <!-- End video-section-videos -->
-</section>
-
-<!-- Optional: Show message if no videos loaded/found -->
-<section id="video-section-empty" *ngIf="videoSections.length === 0">
-    <p class="no-videos-message">No videos available at the moment.</p>
-</section>
-
-<section id="casestudy" *ngIf="!showPricingPopup">
-    <h2>{{ caseStudyTitle }}</h2>
-
-    <div class="case-study-images">
-        <img *ngFor="let image of caseStudyImages"
-            [src]="baseUrl + image.image_url"
-            alt="Case Study Image"
-            class="case-study-img"
-            (click)="openBlogPopup(image.id)" />
-
-    </div>
-</section>
-
-<!-- Blog Popup -->
-<div class="blog-popup" *ngIf="selectedImageData" (click)="closeBlogPopup()">
-    <div class="popup-content" (click)="$event.stopPropagation()">
-
-        <button class="close-popup-x-btn" (click)="closeBlogPopup()"
-            aria-label="Close popup">×</button>
-
-        <img [src]="baseUrl + selectedImageData.image_url" alt="Popup Image"
-            class="popup-image" />
-        <h2>{{ selectedImageData.title }}</h2>
-        <h4>{{ selectedImageData.subTitle }}</h4>
-        <!-- <p>{{ selectedImageData.paragraph }}</p> -->
-        <p class="formatted-paragraph">{{ selectedImageData.paragraph }}</p>
-        <button (click)="closeBlogPopup()" class="close-btn">Close</button>
-    </div>
 </div>
 
-<!-- Contact Section -->
-<section id="contact" class="contact-section" *ngIf="!showPricingPopup">
-    <div class="contact-wrapper">
-        <!-- Left Side -->
-        <div class="contact-content">
-            <h2 class="contact-heading">{{ contactHeading }}</h2>
-            <p class="contact-subheading">{{ contactSubheading }}</p>
-            <img *ngIf="contactImageUrl" [src]="contactImageUrl"
-                alt="Contact Image" class="contact-image" />
-        </div>
+</div>
 
-        <!-- Right Side: Form -->
-        <div class="contact-form-container">
-            <form>
-                <label for="fullName">Full Name</label>
-                <input id="fullName" name="name" type="text"
-                    class="contact-input" [(ngModel)]="name" />
 
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email"
-                    class="contact-input" [(ngModel)]="email" />
+<button
+class="carousel-control-prev"
+type="button"
+data-bs-target="#heroCarousel"
+data-bs-slide="prev"
+>
 
-                <label for="phone">Phone Number</label>
-                <input id="phone" name="phone" type="tel" class="contact-input"
-                    [(ngModel)]="phone" />
+<span
+class="carousel-control-prev-icon"
+></span>
 
-                <label for="message">Requirement</label>
-                <textarea id="message" name="message" class="contact-textarea"
-                    [(ngModel)]="message"></textarea>
+</button>
 
-                <button type="submit" class="contact-button"
+
+<button
+class="carousel-control-next"
+type="button"
+data-bs-target="#heroCarousel"
+data-bs-slide="next"
+>
+
+<span
+class="carousel-control-next-icon"
+></span>
+
+</button>
+
+</div>
+
+</div>
+
+
+<button class="book-btn" (click)="scrollToContact()">
+
+{{buttonText}}
+
+</button>
+
+
+<div class="scroll">
+
+SCROLL DOWN
+
+</div>
+
+</div>
+
+
+
+<div class="left-card">
+
+<h6>
+
+MONTHLY ACTIVITY
+
+</h6>
+
+<div class="activity-content">
+
+<div class="activity-text">
+
+<h2>
+
+{{activityText}}
+
+</h2>
+
+<p>
+
+Average range
+
+</p>
+
+</div>
+
+<div class="progress-ring">
+
+<div class="ring">
+
+<span>
+
+{{activityAvg}}%
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+
+<div class="right-card">
+
+<div class="top-row">
+
+<h2>
+
+{{barTotal}}k
+
+</h2>
+
+<span class="growth">
+
+↗ +{{barAvg}}%
+
+</span>
+
+</div>
+
+
+<div class="bars">
+
+<div
+class="bar"
+*ngFor="
+let item of [].constructor(
+barsCount
+)
+"
+>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="chat-btn">
+
+💼
+
+</div>
+
+</section>
+
+
+
+<!-- ================= stats SECTION ================= -->
+
+
+<section class="stats-section">
+
+<div class="clients-container">
+
+<div
+class="stat-box"
+*ngFor="
+let item of stats
+"
+>
+
+<div class="icon">
+
+<i
+[class]="item.icon"
+></i>
+
+</div>
+
+<h2>
+
+{{item.count_value}}
+
+</h2>
+
+<p>
+
+{{item.title}}
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= trusted SECTION ================= -->
+
+<section class="trusted-section">
+
+<h6 class="section-title-trusted">
+
+TRUSTED BY INNOVATORS WORLDWIDE
+
+</h6>
+
+
+<div class="slider">
+
+<div class="slide-track">
+
+<div
+class="slide"
+*ngFor="
+let logo of duplicatedLogos
+"
+>
+
+<img
+[src]="logo"
+alt="client logo"
+/>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= expertise SECTION ================= -->
+
+<section class="expertise-section">
+
+<div class="container">
+
+<div class="heading">
+
+<h2>
+
+Our Expertise
+
+</h2>
+
+<p>
+
+We combine technical excellence
+with strategic thinking.
+
+</p>
+
+</div>
+
+
+<div class="expertise-grid">
+
+<div
+
+*ngFor="
+let item of expertiseData
+"
+
+class="expertise-card"
+
+[class.large]="
+item.card_size==='large'
+"
+
+>
+
+<div class="icon-box">
+
+<i
+[class]="item.icon"
+></i>
+
+</div>
+
+
+<h3>
+
+{{item.title}}
+
+</h3>
+
+
+<p>
+
+{{item.description}}
+
+</p>
+
+
+<a
+[href]="item.button_url"
+>
+
+{{item.button_text}}
+
+<i
+class="bi bi-arrow-right"
+></i>
+
+</a>
+
+
+<div class="bg-icon">
+
+<i
+[class]="item.icon"
+></i>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= why SECTION ================= -->
+
+<section class="why-section">
+
+<div class="container">
+
+<div class="why-wrapper">
+
+<div class="why-content">
+
+<h2>
+
+{{whyData?.heading}}
+
+<br>
+
+<span>
+
+{{whyData?.highlight_text}}
+
+</span>
+
+</h2>
+
+
+<p>
+
+{{whyData?.description_1}}
+
+</p>
+
+
+<p>
+
+{{whyData?.description_2}}
+
+</p>
+
+
+<div class="feature-list">
+
+<div
+
+class="feature-item"
+
+*ngFor="
+let item of whyFeatures
+"
+
+>
+
+<div class="check-icon">
+
+<i
+[class]="item.icon"
+></i>
+
+</div>
+
+
+<div>
+
+<h4>
+
+{{item.title}}
+
+</h4>
+
+<p>
+
+{{item.description}}
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="why-image">
+
+<img
+[src]="whyImage"
+/>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+<section class="case-studies">
+
+<div class="container">
+
+<div class="section-heading">
+
+<h2>
+
+{{caseStudyTitle}}
+
+</h2>
+
+<p>
+
+Real-world impact delivered through strategic innovation and AI integration.
+
+</p>
+
+</div>
+
+
+
+<div class="case-grid">
+
+<div
+
+class="case-card"
+
+*ngFor="
+let image of caseStudyImages
+"
+
+(click)="
+openBlogPopup(
+image.id
+)
+"
+
+>
+
+<img
+
+[src]="
+baseUrl+
+image.image_url
+"
+
+alt="case study"
+
+/>
+
+<h3>
+
+{{image.title}}
+
+</h3>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+
+<!-- POPUP -->
+
+<div
+
+class="blog-popup"
+
+*ngIf="
+selectedImageData
+"
+
+(click)="
+closeBlogPopup()
+"
+
+>
+
+<div
+
+class="popup-content"
+
+(click)="
+$event.stopPropagation()
+"
+
+>
+
+
+<button
+
+class="close-popup-x-btn"
+
+(click)="
+closeBlogPopup()
+"
+
+>
+
+×
+
+</button>
+
+
+<img
+
+class="popup-image"
+
+[src]="
+baseUrl+
+selectedImageData.image_url
+"
+
+
+/>
+
+
+<h2>
+
+{{selectedImageData.title}}
+
+</h2>
+
+
+<h4>
+
+{{selectedImageData.subTitle}}
+
+</h4>
+
+
+<p class="formatted-paragraph">
+
+{{selectedImageData.paragraph}}
+
+</p>
+
+
+<button
+
+class="close-btn"
+
+(click)="
+closeBlogPopup()
+"
+
+>
+
+Close
+
+</button>
+
+
+</div>
+
+</div>
+
+
+
+<section class="timeline-section">
+
+<div class="container">
+
+<div class="section-title">
+
+<h2>
+
+{{processSection?.heading}}
+
+<span>
+
+{{processSection?.highlight_text}}
+
+</span>
+
+</h2>
+
+<p>
+
+{{processSection?.subheading}}
+
+</p>
+
+</div>
+
+
+<div class="timeline">
+
+
+<div
+
+class="timeline-item"
+
+*ngFor="
+let item of processSteps
+"
+
+[class.left]="
+item.position==='left'
+"
+
+[class.right]="
+item.position==='right'
+"
+
+>
+
+<div class="timeline-content">
+
+<span>
+
+{{item.phase_no}}
+
+</span>
+
+
+<h3>
+
+{{item.title}}
+
+</h3>
+
+
+<p>
+
+{{item.description}}
+
+</p>
+
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="tech-stack">
+
+<div class="container">
+
+<div class="section-title">
+
+<span class="badge">
+
+✨ Our Technology Stack
+
+</span>
+
+
+<h2>
+
+{{techMainPage?.main_text}}
+
+<span>
+
+Best in Class
+
+</span>
+
+</h2>
+
+</div>
+
+
+<div class="slideri">
+
+<div class="slide-track-two">
+
+
+<div
+
+class="tech-card"
+
+*ngFor="
+let tech of duplicatedTechList
+"
+
+>
+
+<img
+
+[src]="
+getTechImage(
+tech.tech_image
+)
+"
+
+[alt]="
+tech.tech_name
+"
+
+/>
+
+
+<p>
+
+{{tech.tech_name}}
+
+</p>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section class="contact-section" id="contact">
+
+<div class="container">
+
+<div class="contact-wrapper">
+
+<!-- LEFT -->
+
+<div class="contact-info">
+
+<h2>Direct Inquiry</h2>
+
+<p>
+Not ready for a full strategy session?
+Send us a direct message and we'll get back shortly.
+</p>
+
+<div class="email-box">
+
+<div class="icon">
+<i class="fa-regular fa-envelope"></i>
+</div>
+
+<div>
+
+<span>EMAIL US</span>
+
+<h4>hello@scratchtosuccess.com</h4>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="contact-form">
+
+<input
+type="text"
+placeholder="Full Name"
+[(ngModel)]="name"
+name="name"
+/>
+
+<input
+type="email"
+placeholder="Email Address"
+[(ngModel)]="email"
+name="email"
+/>
+
+<input
+type="text"
+placeholder="Phone Number"
+[(ngModel)]="phone"
+name="phone"
+/>
+
+<textarea
+placeholder="How can we help?"
+[(ngModel)]="message"
+name="message"
+></textarea>
+
+
+
+
+<button type="button"
                     (click)="openDateTimePopup()">
-                    <span class="contact-button-text">{{ contactButtonText
-                        }}</span>
+                    Book Appointment
+
                 </button>
-            </form>
-        </div>
-    </div>
+
+</div>
+
+</div>
+
+</div>
+
 </section>
 
-<!-- DATE & TIME POPUP -->
+
 <div *ngIf="showDateTimePopup" (click)="closePopup()" class="overlay">
     <div class="popup" (click)="$event.stopPropagation()">
         <button class="close-popup-btn" (click)="closePopup()">×</button>
@@ -835,135 +1096,224 @@
         <button class="ok-btn" (click)="closeFillFormPopup()">Okay</button>
     </div>
 </div>
-<!-- ================== END OF FILL FORM POPUP ================== -->
 
-<!-- Tech Expert Page -->
-<section id="tech-expert" *ngIf="!showPricingPopup">
-    <div class="tech-container" *ngIf="techMainPage">
-        <h2>{{ techMainPage.main_text }}</h2>
-    </div>
-    <div class="tech-grid">
-        <div class="tech-items">
-            <div *ngFor="let tech of techList; let i = index" class="tech-item">
-                <div class="techImage">
-                    <img *ngIf="tech.tech_image"
-                        [src]="baseUrl + tech.tech_image" alt="Tech Icon" />
-                </div>
-                <div class="tech-name">
-                    <p class="text-sm">{{ tech.tech_name }}</p>
-                </div>
-            </div>
-        </div>
-        <img *ngIf="techMainPage.main_image_url"
-            [src]="baseUrl + techMainPage.main_image_url" alt="Tech Main Image"
-            class="tech-main-image" style="margin-top: -120px;" />
-    </div>
+<footer class="footer">
 
-</section>
+<div class="footer-container">
 
-<!-- Faqs page -->
-<section id="faqs" *ngIf="!showPricingPopup">
-    <div class="faq-container">
-        <h2 class="faq-title">{{ faqTitle }}</h2>
-        <p class="faq-subheading">{{ faqSubheading }}</p>
+<!-- ABOUT -->
 
-        <div *ngFor="let item of faqs" class="faq-item">
-            <h4 class="faq-question">{{ item.question }}</h4>
-            <p class="faq-answer">{{ item.answer }}</p>
-        </div>
-    </div>
+<div class="footer-col footer-about">
 
-    <div class="questionAndAnswerContainer">
-        <div
-            class="questionAndAnswer"
-            *ngFor="let item of faqsData; let i = index"
-            [class.expanded]="expandedIndex === i">
-            <div class="faq-header" (click)="toggleAnswer(i)">
-                <h4 class="faq-question">{{ item.question }}</h4>
-                <span class="arrow-icon">
-                    <i
-                        [ngClass]="expandedIndex === i ? 'arrow-up' : 'arrow-down'"></i>
-                </span>
-            </div>
-            <p class="faq-answer" *ngIf="expandedIndex === i || !isMobile">{{
-                item.answer }}</p>
-        </div>
-    </div>
+<img
+src="assets/mainlogo.png"
+class="footer-logo"
+/>
 
-</section>
+<p>
 
-<!-- Footer Section -->
-<footer class="footer" *ngIf="!showPricingPopup">
-    <div class="footer-container">
-        <div class="footer-left">
-            <p>{{ footerContent?.about_text ||
-                'Lorem Ipsum is simply dummy text of the printing and typesetting industry'
-                }}</p>
-            <div class="social-icons">
-                <!-- Loop through the social icons array and display each icon as an image -->
-                <a *ngFor="let icon of socialIcons" [href]="icon.link_url"
-                    target="_blank">
-                    <img [src]="baseUrl + icon.icon_url"
-                        alt="{{ icon.platform_name }}"
-                        style="background-color: white; width: 32px; border-radius: 50%; padding: 3px; height: auto;" />
-                </a>
-            </div>
-        </div>
+{{footerContent?.about_text}}
 
-        <div class="footer-links" style="text-align: center;">
-            <h4>{{ footerContent?.legal_title || 'Legal' }}</h4>
-            <ul style="list-style: none; padding: 0;">
-                <li>
-                    <strong (click)="openLegalPopup('privacy')">Privacy and
-                        Policy</strong><br />
-                </li>
-                <li>
-                    <strong (click)="openLegalPopup('terms')">Terms &
-                        Conditions</strong><br />
-                </li>
-            </ul>
-        </div>
+</p>
 
-        <!-- Popup Modal -->
-        <div
-            *ngIf="showLegalPopup"
-            class="overlay legal-popup-overlay"
-            (click)="closeLegalPopup()">
-            <div
-                class="final-status-popup legal-popup"
-                (click)="$event.stopPropagation()">
-                <h2>
-                    {{ legalPopupType === 'privacy' ? 'Privacy and Policy' :
-                    'Terms & Conditions' }}
-                </h2>
-                <p>
-                    {{
-                    legalPopupType === 'privacy'
-                    ? footerContent?.privacy_policy_text
-                    : footerContent?.terms_conditions_text
-                    }}
-                </p>
+<div class="footer-social">
 
-                <button class="ok-btn" (click)="closeLegalPopup()">Okay</button>
-            </div>
-        </div>
+<a
+*ngFor="let icon of socialIcons"
+[href]="icon.link_url"
+target="_blank"
+>
 
-        <div class="footer-contact">
-            <h4>{{ footerContent?.contact_title || 'Contact' }}</h4>
-            <ul>
-                <li><i class="fas fa-map-marker-alt"></i> {{
-                    footerContent?.contact_address ||
-                    'Lorem Ipsum is simply dummy text of the printing and typesetting industry'
-                    }}</li>
-                <li><i class="fas fa-phone-alt"></i> {{
-                    footerContent?.contact_phone || '+91 8724982483' }}</li>
-                <li><i class="fas fa-envelope"></i> {{
-                    footerContent?.contact_email || 'email@email.com' }}</li>
-            </ul>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        Copyright © 2024. All rights reserved. Managed by: SUNRA SOFT TECH
-        PRIVATE LIMITED
-    </div>
+<img
+[src]="baseUrl+icon.icon_url"
+style="
+width:32px;
+height:32px;
+border-radius:50%;
+background:white;
+padding:4px;
+"
+/>
+
+</a>
+
+</div>
+
+</div>
+
+<!-- CONTACT -->
+
+<div class="footer-col">
+
+<h4>
+
+{{footerContent?.contact_title}}
+
+</h4>
+
+<ul>
+
+<li>
+
+{{footerContent?.contact_address}}
+
+</li>
+
+<li>
+
+{{footerContent?.contact_phone}}
+
+</li>
+
+<li>
+
+{{footerContent?.contact_email}}
+
+</li>
+
+</ul>
+
+</div>
+
+<!-- LEGAL -->
+
+<div class="footer-col">
+
+<h4>
+
+{{footerContent?.legal_title}}
+
+</h4>
+
+<ul>
+
+<li>
+
+<a
+(click)="openLegalPopup('privacy')"
+>
+
+Privacy Policy
+
+</a>
+
+</li>
+
+<li>
+
+<a
+(click)="openLegalPopup('terms')"
+>
+
+Terms Of Service
+
+</a>
+
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+
+<!-- FOOTER BOTTOM -->
+
+<div class="footer-bottom">
+
+<p>
+
+© 2026 Scratch To Success.
+All rights reserved.
+
+</p>
+
+<div class="footer-links">
+
+<a
+(click)="openLegalPopup('privacy')"
+>
+
+Privacy
+
+</a>
+
+<a
+(click)="openLegalPopup('terms')"
+>
+
+Terms
+
+</a>
+
+</div>
+
+</div>
+
 </footer>
+
+
+
+<!-- LEGAL POPUP -->
+
+
+<div
+*ngIf="showLegalPopup"
+class="legal-overlay"
+(click)="closeLegalPopup()"
+>
+
+<div
+class="legal-popup"
+(click)="$event.stopPropagation()"
+>
+
+<button
+class="close-btnn"
+(click)="closeLegalPopup()"
+>
+
+×
+
+</button>
+
+<h2>
+
+{{legalPopupType==='privacy'
+
+?
+
+'Privacy Policy'
+
+:
+
+'Terms & Conditions'
+
+}}
+
+</h2>
+
+<div class="legal-content">
+
+<pre>
+
+{{legalPopupType==='privacy'
+
+?
+
+footerContent?.privacy_policy_text
+
+:
+
+footerContent?.terms_conditions_text
+
+}}
+
+</pre>
+
+</div>
+
+</div>
+
+</div>

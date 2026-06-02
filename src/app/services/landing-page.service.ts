@@ -8,7 +8,7 @@ import { environment } from 'src/environments/environment';
 })
 export class LandingPageService {
 
-  // private baseUrl = 'http://localhost:3000/api/admin'; // Adjust the URL as needed
+
 
   private baseUrl = `${environment.baseurl}`;
 
@@ -25,6 +25,55 @@ export class LandingPageService {
   getLandingPageBanners(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getLandingPageBanners`, {});
   }
+
+  getStats(){
+
+return this.http.post(
+
+`${this.baseUrl}/admin/getStats`,
+
+{}
+
+);
+
+}
+
+
+getExpertise(){
+
+return this.http.post(
+
+`${this.baseUrl}/admin/getExpertise`,
+
+{}
+
+)
+
+}
+
+getWhySection(){
+
+return this.http.post(
+
+`${this.baseUrl}/admin/getWhySection`,
+
+{}
+
+);
+
+}
+
+getProcessSection(){
+
+return this.http.post(
+
+`${this.baseUrl}/admin/getProcessSection`,
+
+{}
+
+);
+
+}
 
   getFeaturePage(): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin/getFeaturePage`, {});
@@ -92,9 +141,7 @@ export class LandingPageService {
     return this.http.post(`${this.baseUrl}/admin/getSubscriptionAmount`, {});
   }
 
-  // createRazorpayOrder(amount: number): Observable<any> {
-  //   return this.http.post(`${this.baseUrl}/payment/createRazorpayOrder`, { amount });
-  // }
+
 
   createRazorpayOrder(amount: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment/createRazorpayOrder`, { amount }).pipe(
