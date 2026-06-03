@@ -262,7 +262,7 @@ font-family:sans-serif;
 
 .hero-content p {
   margin-top: 20px;
-  font-size: clamp(16px, 2vw, 24px);
+  font-size: clamp(16px, 2vw, 25px);
   color: #aaa;
   line-height: 1.8;
   max-width: 850px;
@@ -292,11 +292,84 @@ font-family:sans-serif;
   transform: translateY(-3px);
 }
 
-.scroll {
-  margin-top: 60px;
-  letter-spacing: 5px;
-  color: #777;
-  font-size: 13px;
+.scroll{
+margin-top:60px;
+
+letter-spacing:5px;
+
+color:#777;
+
+font-size:13px;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:10px;
+}
+
+.scroll-arrow{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+width:25px;
+
+height:35px;
+
+}
+
+.scroll-arrow span{
+
+width:14px;
+
+height:14px;
+
+border-right:2px solid #ff9800;
+
+border-bottom:2px solid #ff9800;
+
+transform:rotate(45deg);
+
+animation:scrollBounce 1.5s infinite;
+
+display:block;
+
+}
+
+@keyframes scrollBounce{
+
+0%{
+
+opacity:0;
+
+transform:
+rotate(45deg)
+translate(-8px,-8px);
+
+}
+
+50%{
+
+opacity:1;
+
+}
+
+100%{
+
+opacity:0;
+
+transform:
+rotate(45deg)
+translate(8px,8px);
+
+}
+
 }
 
 /* ==========================
@@ -573,7 +646,7 @@ height:30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 10px;
   color: white;
   z-index: 999;
   cursor: pointer;
@@ -655,7 +728,13 @@ height:30px;
     font-size: 12px;
     letter-spacing: 3px;
   }
+    .scroll-arrow span{
 
+    width:12px;
+
+    height:12px;
+
+    }
   .left-card,
   .right-card {
     display: none;
@@ -664,7 +743,7 @@ height:30px;
   .chat-btn {
     width: 55px;
     height: 55px;
-    font-size: 22px;
+    font-size: 10px;
     right: 15px;
     bottom: 15px;
   }
@@ -3633,13 +3712,13 @@ font-size:22px;
 .legal-popup {
     background-color: #220b2e;
     padding: 80px;
-    max-width: 600px;
+    max-width: auto;
     max-height: 500px;
     width: 90%;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     position: relative;
-    text-align: center;
+    text-align: left;
     color: white;
     border: 1px solid white;
     overflow-y: auto;

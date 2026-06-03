@@ -2,7 +2,7 @@
 
 import { LandingPageService } from '../services/landing-page.service';
 import { environment } from 'src/environments/environment';
-import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList,AfterViewInit } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'; // <-- Import
@@ -41,9 +41,13 @@ apiUrl='https://scratchtosuccess.com/api'; // backend domain
 
 baseUrl=this.apiUrl;
 
-  @ViewChild('daysWrapper') daysWrapper!: ElementRef;
+  @ViewChild('daysWrapper')
+daysWrapper!: ElementRef;
 
+@ViewChildren('videoPlayer')
+videoPlayers!: QueryList<ElementRef<HTMLVideoElement>>;
 
+private observer!: IntersectionObserver;
 constructor(
 
 private landingService: LandingPageService,
@@ -231,6 +235,141 @@ fetchLandingPageInfo(): void {
       }
     });
   }
+getVideoUrl(
+file:string
+){
+
+return this.baseUrl + file;
+
+}
+
+ngAfterViewInit(): void {
+
+setTimeout(()=>{
+
+this.observeVideos();
+
+},500);
+
+}
+
+observeVideos(): void {
+
+if(this.observer){
+
+this.observer.disconnect();
+
+}
+
+this.observer =
+new IntersectionObserver(
+
+(entries)=>{
+
+entries.forEach(entry=>{
+
+const video =
+entry.target as HTMLVideoElement;
+
+if(entry.isIntersecting){
+
+this.pauseOtherVideos(video);
+
+if(video.paused){
+
+video.muted=false;
+
+video.play()
+.catch(()=>{
+
+video.muted=true;
+
+video.play();
+
+});
+
+}
+
+}else{
+
+video.pause();
+
+}
+
+});
+
+},
+
+{
+
+threshold:0.6
+
+}
+
+);
+
+this.videoPlayers.forEach(videoRef=>{
+
+const video =
+videoRef.nativeElement;
+
+this.observer.observe(video);
+
+});
+
+}
+
+pauseOtherVideos(
+currentVideo:HTMLVideoElement
+):void{
+
+this.videoPlayers.forEach(videoRef=>{
+
+const video =
+videoRef.nativeElement;
+
+if(
+video!==currentVideo &&
+!video.paused
+){
+
+video.pause();
+
+video.currentTime=0;
+
+}
+
+});
+
+}
+
+onVideoPlay(
+event:Event
+):void{
+
+const currentVideo =
+event.target as HTMLVideoElement;
+
+this.pauseOtherVideos(
+currentVideo
+);
+
+}
+
+pauseAllVideos():void{
+
+this.videoPlayers.forEach(videoRef=>{
+
+const video =
+videoRef.nativeElement;
+
+video.pause();
+
+video.currentTime=0;
+
+});
+
+}
 
 
 getHeadingPart(
@@ -262,13 +401,7 @@ words
 }
 
 
-getVideoUrl(
-file:string
-){
 
-return this.baseUrl + file;
-
-}
 
 
 stats:any[]=[];

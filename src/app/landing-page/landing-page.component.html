@@ -115,7 +115,8 @@ let item of navbarOptions
 <div
 id="heroCarousel"
 class="carousel slidee"
-data-bs-ride="carousel"
+data-bs-ride="false"
+data-bs-interval="false"
 >
 
 <div class="carousel-inner">
@@ -130,20 +131,21 @@ let i=index
 >
 
 <video
+#videoPlayer
 *ngIf="
 banner.type==='video'
 "
 controls
 playsinline
+muted
 preload="metadata"
+(play)="onVideoPlay($event)"
 >
 
 <source
-[src]="
-getVideoUrl(
+[src]="getVideoUrl(
 banner.file_url
-)
-"
+)"
 type="video/mp4"
 />
 
@@ -153,12 +155,12 @@ type="video/mp4"
 
 </div>
 
-
 <button
 class="carousel-control-prev"
 type="button"
 data-bs-target="#heroCarousel"
 data-bs-slide="prev"
+(click)="pauseAllVideos()"
 >
 
 <span
@@ -167,12 +169,12 @@ class="carousel-control-prev-icon"
 
 </button>
 
-
 <button
 class="carousel-control-next"
 type="button"
 data-bs-target="#heroCarousel"
 data-bs-slide="next"
+(click)="pauseAllVideos()"
 >
 
 <span
@@ -196,6 +198,10 @@ class="carousel-control-next-icon"
 <div class="scroll">
 
 SCROLL DOWN
+
+<div class="scroll-arrow">
+  <span></span>
+</div>
 
 </div>
 
@@ -287,9 +293,9 @@ barsCount
 </div>
 
 
-<div class="chat-btn">
+<div class="chat-btn" (click)="scrollToContact()">
 
-💼
+Book Now
 
 </div>
 
@@ -339,7 +345,7 @@ let item of stats
 
 <!-- ================= trusted SECTION ================= -->
 
-<section class="trusted-section">
+<section class="trusted-section" id="trusted">
 
 <h6 class="section-title-trusted">
 
@@ -374,7 +380,7 @@ alt="client logo"
 
 <!-- ================= expertise SECTION ================= -->
 
-<section class="expertise-section">
+<section class="expertise-section" id="expertise">
 
 <div class="container">
 
@@ -565,7 +571,7 @@ let item of whyFeatures
 </section>
 
 
-<section class="case-studies">
+<section class="case-studies" id="case-studies">
 
 <div class="container">
 
@@ -731,7 +737,7 @@ Close
 
 
 
-<section class="timeline-section">
+<section class="timeline-section" id="process">
 
 <div class="container">
 
@@ -918,7 +924,8 @@ Send us a direct message and we'll get back shortly.
 
 <span>EMAIL US</span>
 
-<h4>hello@scratchtosuccess.com</h4>
+<h4>{{footerContent?.contact_email}}
+</h4>
 
 </div>
 
